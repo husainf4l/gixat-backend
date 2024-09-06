@@ -1,0 +1,420 @@
+erDiagram
+
+        UserRole {
+            ADMIN ADMIN
+EMPLOYEE EMPLOYEE
+CLIENT CLIENT
+        }
+    
+
+
+        JobStatus {
+            PENDING PENDING
+IN_PROGRESS IN_PROGRESS
+COMPLETED COMPLETED
+CANCELLED CANCELLED
+        }
+    
+
+
+        AppointmentStatus {
+            PENDING PENDING
+CONFIRMED CONFIRMED
+CANCELLED CANCELLED
+COMPLETED COMPLETED
+        }
+    
+
+
+        InvoiceStatus {
+            PENDING PENDING
+PAID PAID
+OVERDUE OVERDUE
+        }
+    
+
+
+        PaymentMethod {
+            CASH CASH
+CREDIT_CARD CREDIT_CARD
+BANK_TRANSFER BANK_TRANSFER
+        }
+    
+
+
+        PaymentStatus {
+            PENDING PENDING
+COMPLETED COMPLETED
+FAILED FAILED
+        }
+    
+
+
+        OrderStatus {
+            PENDING PENDING
+COMPLETED COMPLETED
+CANCELLED CANCELLED
+        }
+    
+
+
+        NotificationType {
+            SYSTEM SYSTEM
+REMINDER REMINDER
+JOB_UPDATE JOB_UPDATE
+APPOINTMENT APPOINTMENT
+PROMOTIONAL PROMOTIONAL
+        }
+    
+
+
+        ReportType {
+            FINANCIAL FINANCIAL
+PERFORMANCE PERFORMANCE
+INVENTORY INVENTORY
+CLIENT_FEEDBACK CLIENT_FEEDBACK
+        }
+    
+
+
+        LoyaltyTier {
+            BRONZE BRONZE
+SILVER SILVER
+GOLD GOLD
+PLATINUM PLATINUM
+        }
+    
+
+
+        MessageType {
+            WHATSAPP WHATSAPP
+SMS SMS
+EMAIL EMAIL
+        }
+    
+
+
+        ModificationStatus {
+            PENDING PENDING
+APPROVED APPROVED
+REJECTED REJECTED
+COMPLETED COMPLETED
+        }
+    
+
+
+        AssetType {
+            TOOL TOOL
+VEHICLE VEHICLE
+EQUIPMENT EQUIPMENT
+        }
+    
+
+
+        AssetStatus {
+            AVAILABLE AVAILABLE
+IN_USE IN_USE
+UNDER_REPAIR UNDER_REPAIR
+        }
+    
+  "User" {
+    Int id "🗝️"
+    String mobile 
+    String name "❓"
+    String password 
+    UserRole role 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Car" {
+    Int id "🗝️"
+    String make 
+    String model 
+    Int year 
+    String vin 
+    String licensePlate 
+    String barcode 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Job" {
+    Int id "🗝️"
+    String description 
+    JobStatus status 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "JobService" {
+
+    }
+  
+
+  "Service" {
+    Int id "🗝️"
+    String name 
+    String description "❓"
+    Float price 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Reminder" {
+    Int id "🗝️"
+    String message 
+    DateTime remindAt 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Modification" {
+    Int id "🗝️"
+    String description 
+    ModificationStatus status 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Appointment" {
+    Int id "🗝️"
+    DateTime scheduledAt 
+    AppointmentStatus status 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Invoice" {
+    Int id "🗝️"
+    Float amount 
+    InvoiceStatus status 
+    DateTime issuedAt 
+    DateTime dueDate 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Payment" {
+    Int id "🗝️"
+    Float amount 
+    DateTime paymentDate 
+    PaymentMethod method 
+    PaymentStatus status 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "InventoryItem" {
+    Int id "🗝️"
+    String name 
+    String description "❓"
+    Int stockLevel 
+    Float price 
+    Int minStockLevel 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "JobItem" {
+    Int quantity 
+    }
+  
+
+  "Supplier" {
+    Int id "🗝️"
+    String name 
+    String contact "❓"
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Order" {
+    Int id "🗝️"
+    OrderStatus status 
+    DateTime orderDate 
+    DateTime deliveryDate "❓"
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "OrderItem" {
+    Int quantity 
+    }
+  
+
+  "LoyaltyProgram" {
+    Int id "🗝️"
+    Int points 
+    LoyaltyTier tier 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Notification" {
+    Int id "🗝️"
+    String message 
+    NotificationType notificationType 
+    Boolean isRead 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Report" {
+    Int id "🗝️"
+    ReportType reportType 
+    DateTime generatedAt 
+    Json content 
+    }
+  
+
+  "Coupon" {
+    Int id "🗝️"
+    String code 
+    Float discountValue 
+    Boolean isPercentage 
+    DateTime validFrom 
+    DateTime validTo 
+    Int usageLimit 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Feedback" {
+    Int id "🗝️"
+    Int rating 
+    String comment "❓"
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "Asset" {
+    Int id "🗝️"
+    String name 
+    AssetType type 
+    DateTime purchaseDate 
+    DateTime lastServiceDate "❓"
+    AssetStatus status 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "MessageTemplate" {
+    Int id "🗝️"
+    String title 
+    String body 
+    MessageType messageType 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+
+  "AuditLog" {
+    Int id "🗝️"
+    String action 
+    String entity 
+    Int entityId 
+    DateTime timestamp 
+    String details "❓"
+    }
+  
+
+  "Feature" {
+    Int id "🗝️"
+    String name 
+    Boolean enabled 
+    DateTime createdAt 
+    DateTime updatedAt 
+    }
+  
+    "User" o|--|| "UserRole" : "enum:role"
+    "User" o{--}o "Car" : "cars"
+    "User" o{--}o "Job" : "jobs"
+    "User" o{--}o "Invoice" : "invoices"
+    "User" o{--}o "Payment" : "payments"
+    "User" o{--}o "Appointment" : "appointments"
+    "User" o{--}o "Reminder" : "reminders"
+    "User" o{--}o "Notification" : "notifications"
+    "User" o{--}o "LoyaltyProgram" : "loyalty"
+    "User" o{--}o "Modification" : "proposedModifications"
+    "User" o{--}o "Modification" : "approvedModifications"
+    "User" o{--}o "Modification" : "Modification"
+    "User" o{--}o "Report" : "Report"
+    "User" o{--}o "AuditLog" : "AuditLog"
+    "Car" o|--|| "User" : "client"
+    "Car" o{--}o "Modification" : "modifications"
+    "Car" o{--}o "Job" : "jobs"
+    "Car" o{--}o "Invoice" : "invoices"
+    "Car" o{--}o "Appointment" : "Appointment"
+    "Job" o|--|| "JobStatus" : "enum:status"
+    "Job" o|--|| "User" : "assignedUser"
+    "Job" o|--|| "Car" : "car"
+    "Job" o{--}o "JobService" : "jobServices"
+    "Job" o{--}o "JobItem" : "jobItems"
+    "Job" o{--}o "Feedback" : "feedback"
+    "Job" o{--}o "Appointment" : "Appointment"
+    "JobService" o|--|| "Job" : "job"
+    "JobService" o|--|| "Service" : "service"
+    "Service" o{--}o "JobService" : "jobServices"
+    "Service" o|--|o "Invoice" : "Invoice"
+    "Reminder" o|--|| "User" : "user"
+    "Modification" o|--|| "ModificationStatus" : "enum:status"
+    "Modification" o|--|| "User" : "proposedByUser"
+    "Modification" o|--|o "User" : "approvedByUser"
+    "Modification" o|--|| "Car" : "car"
+    "Modification" o|--|o "User" : "User"
+    "Appointment" o|--|| "User" : "client"
+    "Appointment" o|--|| "Car" : "car"
+    "Appointment" o|--|| "AppointmentStatus" : "enum:status"
+    "Appointment" o|--|o "Job" : "job"
+    "Invoice" o|--|| "InvoiceStatus" : "enum:status"
+    "Invoice" o|--|| "User" : "client"
+    "Invoice" o|--|| "Car" : "car"
+    "Invoice" o{--}o "Service" : "services"
+    "Invoice" o{--}o "Payment" : "payments"
+    "Invoice" o|--|o "Coupon" : "coupon"
+    "Payment" o|--|| "Invoice" : "invoice"
+    "Payment" o|--|| "PaymentMethod" : "enum:method"
+    "Payment" o|--|| "PaymentStatus" : "enum:status"
+    "Payment" o|--|o "User" : "User"
+    "InventoryItem" o{--}o "JobItem" : "jobItems"
+    "InventoryItem" o|--|o "Supplier" : "Supplier"
+    "InventoryItem" o{--}o "OrderItem" : "OrderItem"
+    "JobItem" o|--|| "Job" : "job"
+    "JobItem" o|--|| "InventoryItem" : "inventoryItem"
+    "Supplier" o{--}o "InventoryItem" : "items"
+    "Supplier" o{--}o "Order" : "orders"
+    "Order" o|--|| "Supplier" : "supplier"
+    "Order" o{--}o "OrderItem" : "items"
+    "Order" o|--|| "OrderStatus" : "enum:status"
+    "OrderItem" o|--|| "Order" : "order"
+    "OrderItem" o|--|| "InventoryItem" : "inventoryItem"
+    "LoyaltyProgram" o|--|| "User" : "client"
+    "LoyaltyProgram" o|--|| "LoyaltyTier" : "enum:tier"
+    "Notification" o|--|| "NotificationType" : "enum:notificationType"
+    "Notification" o|--|| "User" : "user"
+    "Report" o|--|| "ReportType" : "enum:reportType"
+    "Report" o|--|| "User" : "user"
+    "Coupon" o{--}o "Invoice" : "Invoice"
+    "Feedback" o|--|| "Job" : "job"
+    "Asset" o|--|| "AssetType" : "enum:type"
+    "Asset" o|--|| "AssetStatus" : "enum:status"
+    "MessageTemplate" o|--|| "MessageType" : "enum:messageType"
+    "AuditLog" o|--|| "User" : "user"
