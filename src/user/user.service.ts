@@ -3,13 +3,14 @@ import { PrismaService } from '../prisma/prisma.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class UserService {
     constructor(private readonly prisma: PrismaService) { }
 
     // Create a new user
-    async create(createUserDto: CreateUserDto) {
+    async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
         const { mobile, password, role, name } = createUserDto;
 
         // Check if the mobile number is already registered
@@ -41,7 +42,7 @@ export class UserService {
     }
 
     // Fetch all users, excluding password
-    async findAll() {
+    async findAll(): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>[]> {
         return this.prisma.user.findMany({
             where: { isDeleted: false },
             select: {
@@ -55,7 +56,7 @@ export class UserService {
     }
 
     // Fetch a single user by ID
-    async findOne(id: number) {
+    async findOne(id: number): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
         const user = await this.prisma.user.findUnique({
             where: { id },
             select: {
@@ -75,7 +76,7 @@ export class UserService {
     }
 
     // Fetch user by mobile (for login or other purposes)
-    async findByMobile(mobile: string) {
+    async findByMobile(mobile: string): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
         const user = await this.prisma.user.findUnique({
             where: { mobile },
         });
@@ -88,7 +89,7 @@ export class UserService {
     }
 
     // Update user by ID
-    async update(id: number, updateUserDto: UpdateUserDto) {
+    async update(id: number, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
         const { mobile, name, password } = updateUserDto;
 
         let hashedPassword;
@@ -103,12 +104,19 @@ export class UserService {
                 name,
                 password: hashedPassword,
             },
+            select: {
+                id: true,
+                mobile: true,
+                name: true,
+                role: true,
+                createdAt: true,
+            },
         });
     }
 
     // Soft delete a user by ID
-    async remove(id: number) {
-        return this.prisma.user.update({
+    async remove(id: number): Promise<void> {
+        await this.prisma.user.update({
             where: { id },
             data: {
                 isDeleted: true,

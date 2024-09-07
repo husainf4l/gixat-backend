@@ -1,5 +1,3 @@
-// schema.prisma
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -12,7 +10,6 @@ datasource db {
 enum UserRole {
   ADMIN
   EMPLOYEE
-  CLIENT
 }
 
 enum JobStatus {
@@ -101,27 +98,33 @@ enum AssetStatus {
 }
 
 model User {
-  id                    Int             @id @default(autoincrement())
-  mobile                String          @unique
-  name                  String?
-  password              String
-  role                  UserRole
-  cars                  Car[]           @relation("ClientCars")
-  jobs                  Job[]           @relation("AssignedJobs")
-  invoices              Invoice[]
-  payments              Payment[]
-  appointments          Appointment[]
-  reminders             Reminder[]
-  notifications         Notification[]
-  loyalty               LoyaltyProgram?
-  proposedModifications Modification[]  @relation("ProposedModifications")
-  approvedModifications Modification[]  @relation("ApprovedModifications")
-  createdAt             DateTime        @default(now())
-  updatedAt             DateTime        @updatedAt
-  Modification          Modification[]
-  Report                Report[]
-  AuditLog              AuditLog[]
-  isDeleted             Boolean         @default(false) // Soft deletion field
+  id            Int            @id @default(autoincrement())
+  mobile        String         @unique
+  name          String?
+  password      String
+  role          UserRole
+  jobs          Job[]          @relation("AssignedJobs")
+  invoices      Invoice[]
+  payments      Payment[]
+  notifications Notification[]
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  AuditLog      AuditLog[]
+  isDeleted     Boolean        @default(false) // Soft deletion field
+  Report        Report[]
+}
+
+model Client {
+  id             Int             @id @default(autoincrement())
+  mobile         String          @unique
+  address        String?
+  cars           Car[]           @relation("ClientCars")
+  invoices       Invoice[]
+  reminders      Reminder[]
+  appointments   Appointment[]
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  LoyaltyProgram LoyaltyProgram?
 }
 
 model Car {
@@ -133,7 +136,7 @@ model Car {
   licensePlate  String         @unique
   barcode       String         @unique
   clientId      Int
-  client        User           @relation("ClientCars", fields: [clientId], references: [id])
+  client        Client         @relation("ClientCars", fields: [clientId], references: [id])
   modifications Modification[]
   jobs          Job[]
   invoices      Invoice[]
@@ -184,34 +187,27 @@ model Reminder {
   id        Int      @id @default(autoincrement())
   message   String
   remindAt  DateTime
-  userId    Int
-  user      User     @relation(fields: [userId], references: [id])
+  clientId  Int
+  client    Client   @relation(fields: [clientId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
 
-// Modifications suggested by consultants
 model Modification {
-  id             Int                @id @default(autoincrement())
-  description    String
-  status         ModificationStatus @default(PENDING)
-  proposedBy     Int
-  proposedByUser User               @relation("ProposedModifications", fields: [proposedBy], references: [id])
-  approvedBy     Int?
-  approvedByUser User?              @relation("ApprovedModifications", fields: [approvedBy], references: [id])
-  carId          Int
-  car            Car                @relation(fields: [carId], references: [id])
-  createdAt      DateTime           @default(now())
-  updatedAt      DateTime           @updatedAt
-  User           User?              @relation(fields: [userId], references: [id])
-  userId         Int?
+  id          Int                @id @default(autoincrement())
+  description String
+  status      ModificationStatus @default(PENDING)
+  carId       Int
+  car         Car                @relation(fields: [carId], references: [id])
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
 }
 
 // Appointments for service
 model Appointment {
   id          Int               @id @default(autoincrement())
   clientId    Int
-  client      User              @relation(fields: [clientId], references: [id])
+  client      Client            @relation(fields: [clientId], references: [id])
   carId       Int
   car         Car               @relation(fields: [carId], references: [id])
   scheduledAt DateTime
@@ -222,7 +218,6 @@ model Appointment {
   updatedAt   DateTime          @updatedAt
 }
 
-// Invoice for services rendered
 model Invoice {
   id        Int           @id @default(autoincrement())
   amount    Float
@@ -230,7 +225,7 @@ model Invoice {
   issuedAt  DateTime      @default(now())
   dueDate   DateTime
   clientId  Int
-  client    User          @relation(fields: [clientId], references: [id])
+  client    Client        @relation(fields: [clientId], references: [id])
   carId     Int
   car       Car           @relation(fields: [carId], references: [id])
   services  Service[]
@@ -239,6 +234,8 @@ model Invoice {
   coupon    Coupon?       @relation(fields: [couponId], references: [id])
   createdAt DateTime      @default(now())
   updatedAt DateTime      @updatedAt
+  User      User?         @relation(fields: [userId], references: [id])
+  userId    Int?
 }
 
 model Payment {
@@ -251,11 +248,10 @@ model Payment {
   status      PaymentStatus @default(PENDING)
   createdAt   DateTime      @default(now())
   updatedAt   DateTime      @updatedAt
-  User        User?         @relation(fields: [userId], references: [id])
   userId      Int?
+  user        User?         @relation(fields: [userId], references: [id])
 }
 
-// Inventory management
 model InventoryItem {
   id            Int         @id @default(autoincrement())
   name          String      @unique
@@ -266,8 +262,8 @@ model InventoryItem {
   jobItems      JobItem[] // Relation to track usage in jobs
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
-  Supplier      Supplier?   @relation(fields: [supplierId], references: [id])
   supplierId    Int?
+  supplier      Supplier?   @relation(fields: [supplierId], references: [id])
   OrderItem     OrderItem[]
 }
 
@@ -282,7 +278,6 @@ model JobItem {
   @@id([jobId, inventoryItemId])
 }
 
-// Suppliers for parts
 model Supplier {
   id        Int             @id @default(autoincrement())
   name      String
@@ -318,8 +313,8 @@ model OrderItem {
 
 model LoyaltyProgram {
   id        Int         @id @default(autoincrement())
-  clientId  Int         @unique // Add @unique to indicate one-to-one relation
-  client    User        @relation(fields: [clientId], references: [id])
+  clientId  Int         @unique
+  client    Client      @relation(fields: [clientId], references: [id])
   points    Int         @default(0)
   tier      LoyaltyTier @default(BRONZE)
   createdAt DateTime    @default(now())

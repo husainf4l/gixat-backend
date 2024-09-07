@@ -1,46 +1,46 @@
-import { Controller, Post, Get, Param, Body, Delete, Patch, UseGuards, Req } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard';
-
-
+import { User } from '@prisma/client';
 
 @Controller('users')
 export class UserController {
     constructor(private readonly userService: UserService) { }
 
-    // Create a new user
     @Post()
-    async create(@Body() createUserDto: CreateUserDto) {
+    @HttpCode(HttpStatus.CREATED)
+    async create(@Body() createUserDto: CreateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
         return this.userService.create(createUserDto);
     }
 
-
     @Get()
-    @UseGuards(JwtAuthGuard)
-    async findAll(@Req() req: any) {
+    @HttpCode(HttpStatus.OK)
+    async findAll(): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>[]> {
         return this.userService.findAll();
     }
 
-
-    // Fetch a single user by ID
     @Get(':id')
-    @UseGuards(JwtAuthGuard)
-
-    async findOne(@Param('id') id: string) {
-        return this.userService.findOne(+id);
+    @HttpCode(HttpStatus.OK)
+    async findOne(@Param('id') id: number): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+        return this.userService.findOne(id);
     }
 
-    // Update a user by ID
-    @Patch(':id')
-    async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-        return this.userService.update(+id, updateUserDto);
+    @Get('by-mobile')
+    @HttpCode(HttpStatus.OK)
+    async findByMobile(@Query('mobile') mobile: string): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+        return this.userService.findByMobile(mobile);
     }
 
-    // Soft delete a user by ID
+    @Put(':id')
+    @HttpCode(HttpStatus.OK)
+    async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+        return this.userService.update(id, updateUserDto);
+    }
+
     @Delete(':id')
-    async remove(@Param('id') id: string) {
-        return this.userService.remove(+id);
+    @HttpCode(HttpStatus.NO_CONTENT)
+    async remove(@Param('id') id: number): Promise<void> {
+        await this.userService.remove(id);
     }
 }

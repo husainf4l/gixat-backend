@@ -1,8 +1,10 @@
-import { IsOptional, IsString, IsMobilePhone, MinLength, Matches } from 'class-validator';
+import { IsString, IsEnum, IsOptional, MinLength } from 'class-validator';
+import { UserRole } from '@prisma/client';
 
 export class UpdateUserDto {
     @IsOptional()
-    @IsMobilePhone()
+    @IsString()
+    @MinLength(10, { message: 'Mobile number must be at least 10 characters long' })
     mobile?: string;
 
     @IsOptional()
@@ -11,7 +13,10 @@ export class UpdateUserDto {
 
     @IsOptional()
     @IsString()
-    @MinLength(8)
-    @Matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)/, { message: 'Password is too weak' })
+    @MinLength(6, { message: 'Password must be at least 6 characters long' })
     password?: string;
+
+    @IsOptional()
+    @IsEnum(UserRole)
+    role?: UserRole;
 }

@@ -1,21 +1,22 @@
-import { IsNotEmpty, IsOptional, IsString, IsEnum, IsMobilePhone, MinLength, Matches } from 'class-validator';
+import { IsNotEmpty, IsString, IsEnum, IsOptional, MinLength } from 'class-validator';
 import { UserRole } from '@prisma/client';
 
 export class CreateUserDto {
     @IsNotEmpty()
-    @IsMobilePhone()  // Ensure it's a valid mobile phone number
+    @IsString()
+    @MinLength(10, { message: 'Mobile number must be at least 10 characters long' })
     mobile: string;
+
+    @IsNotEmpty()
+    @IsString()
+    @MinLength(6, { message: 'Password must be at least 6 characters long' })
+    password: string;
+
+    @IsNotEmpty()
+    @IsEnum(UserRole)
+    role: UserRole;
 
     @IsOptional()
     @IsString()
     name?: string;
-
-    @IsNotEmpty()
-    @IsString()
-    @MinLength(8)  // Minimum length of 8 characters
-    @Matches(/(?=.*\d)(?=.*[a-z])(?=.*[A-Z])(?=.*\W)/, { message: 'Password is too weak' })  // Ensure strong password with numbers, uppercase, lowercase, and special chars
-    password: string;
-
-    @IsEnum(UserRole)
-    role: UserRole;
 }
