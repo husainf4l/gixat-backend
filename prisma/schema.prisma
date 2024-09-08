@@ -134,7 +134,7 @@ model Car {
   year          Int
   vin           String         @unique
   licensePlate  String         @unique
-  barcode       String         @unique
+  barcode       String?        @unique
   clientId      Int
   client        Client         @relation("ClientCars", fields: [clientId], references: [id])
   modifications Modification[]
