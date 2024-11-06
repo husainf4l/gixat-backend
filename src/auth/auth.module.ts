@@ -11,7 +11,7 @@ import { PrismaModule } from '../prisma/prisma.module';  // Import PrismaModule 
         PassportModule,
         JwtModule.register({
             secret: process.env.JWT_SECRET,  // Use the secret from .env
-            signOptions: { expiresIn: process.env.JWT_EXPIRATION },
+            signOptions: { expiresIn: '1h' }
         }),
         PrismaModule,  // Make sure PrismaModule is imported
     ],

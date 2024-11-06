@@ -1,4 +1,4 @@
-import { Controller, Post, Get, Put, Delete, Param, Body, Query, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Put, Delete, Param, Body, Query, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -23,7 +23,7 @@ export class UserController {
     @Get(':id')
     @HttpCode(HttpStatus.OK)
     async findOne(@Param('id') id: number): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
-        return this.userService.findOne(id);
+        return this.userService.findOne(+id);
     }
 
     @Get('by-mobile')
@@ -32,10 +32,10 @@ export class UserController {
         return this.userService.findByMobile(mobile);
     }
 
-    @Put(':id')
+    @Patch(':id')
     @HttpCode(HttpStatus.OK)
     async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
-        return this.userService.update(id, updateUserDto);
+        return this.userService.update(+id, updateUserDto);
     }
 
     @Delete(':id')
