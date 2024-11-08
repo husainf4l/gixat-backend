@@ -7,6 +7,7 @@ import { AuthModule } from './auth/auth.module';
 import { ConfigModule } from '@nestjs/config';
 import { ClientModule } from './client/client.module';
 import { CarModule } from './car/car.module';
+import { BulkModule } from './bulk/bulk.module';
 
 @Module({
   imports: [
@@ -16,7 +17,8 @@ import { CarModule } from './car/car.module';
     PrismaModule,
     UserModule,
     ClientModule,
-    CarModule,],
+    CarModule,
+    BulkModule,],
   controllers: [AppController],
   providers: [AppService],
 })

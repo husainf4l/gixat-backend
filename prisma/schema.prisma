@@ -19,394 +19,141 @@ enum JobStatus {
   CANCELLED
 }
 
-enum AppointmentStatus {
-  PENDING
-  CONFIRMED
-  CANCELLED
-  COMPLETED
-}
-
-enum InvoiceStatus {
-  PENDING
-  PAID
-  OVERDUE
-}
-
-enum PaymentMethod {
-  CASH
-  CREDIT_CARD
-  BANK_TRANSFER
-}
-
-enum PaymentStatus {
-  PENDING
-  COMPLETED
-  FAILED
-}
-
-enum OrderStatus {
-  PENDING
-  COMPLETED
-  CANCELLED
-}
-
-enum NotificationType {
-  SYSTEM
-  REMINDER
-  JOB_UPDATE
-  APPOINTMENT
-  PROMOTIONAL
-}
-
-enum ReportType {
-  FINANCIAL
-  PERFORMANCE
-  INVENTORY
-  CLIENT_FEEDBACK
-}
-
-enum LoyaltyTier {
-  BRONZE
-  SILVER
-  GOLD
-  PLATINUM
-}
-
-enum MessageType {
-  WHATSAPP
-  SMS
-  EMAIL
-}
-
-enum ModificationStatus {
-  PENDING
-  APPROVED
-  REJECTED
-  COMPLETED
-}
-
-enum AssetType {
-  TOOL
-  VEHICLE
-  EQUIPMENT
-}
-
-enum AssetStatus {
-  AVAILABLE
-  IN_USE
-  UNDER_REPAIR
+enum CarStatus {
+  CHECKED_IN // Car has arrived and is checked in
+  DIAGNOSIS // Car is undergoing diagnostic checks
+  AWAITING_PARTS // Parts are needed and awaiting arrival
+  IN_SERVICE // Car is currently being serviced
+  READY_FOR_PICKUP // Service completed, awaiting pickup
+  PICKED_UP // Car has been picked up by the client
+  CANCELLED // Service was cancelled
 }
 
 model User {
-  id            Int            @id @default(autoincrement())
-  mobile        String         @unique
-  name          String?
-  password      String
-  role          UserRole
-  jobs          Job[]          @relation("AssignedJobs")
-  invoices      Invoice[]
-  payments      Payment[]
-  notifications Notification[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  AuditLog      AuditLog[]
-  isDeleted     Boolean        @default(false) // Soft deletion field
-  Report        Report[]
+  id        Int      @id @default(autoincrement())
+  mobile    String   @unique
+  name      String?
+  password  String
+  role      UserRole
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  isDeleted Boolean  @default(false)
 }
 
 model Client {
-  id             Int             @id @default(autoincrement())
-  mobile         String          @unique
-  address        String?
-  cars           Car[]           @relation("ClientCars")
-  invoices       Invoice[]
-  reminders      Reminder[]
-  appointments   Appointment[]
-  createdAt      DateTime        @default(now())
-  updatedAt      DateTime        @updatedAt
-  LoyaltyProgram LoyaltyProgram?
+  id          String   @id @default(cuid())
+  companyName String?
+  taxId       String?
+  firstName   String
+  lastName    String
+  phoneNumber String
+  email       String   @unique
+  addressId   String?  @unique
+  address     Address? @relation(fields: [addressId], references: [id])
+  notes       String?
+  cars        Car[]
+}
+
+model Address {
+  id            String  @id @default(cuid())
+  country       String
+  city          String
+  streetAddress String
+  client        Client?
 }
 
 model Car {
-  id            Int            @id @default(autoincrement())
-  make          String
-  model         String
-  year          Int
-  vin           String         @unique
-  licensePlate  String         @unique
-  barcode       String?        @unique
-  clientId      Int
-  client        Client         @relation("ClientCars", fields: [clientId], references: [id])
-  modifications Modification[]
-  jobs          Job[]
-  invoices      Invoice[]
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
-  Appointment   Appointment[]
+  id               String           @id @default(cuid())
+  makeId           String
+  modelId          String
+  year             Int
+  vin              String?          @unique
+  licenseNumber    String?
+  status           CarStatus        @default(CHECKED_IN)
+  transmissionType TransmissionType
+  clientId         String
+  client           Client           @relation(fields: [clientId], references: [id])
+  make             Make             @relation(fields: [makeId], references: [id]) // Relation to Make
+  model            Model            @relation(fields: [modelId], references: [id]) // Relation to Model
+  notes            String?
+  history          CarHistory[]
+  inspections      Inspection[]
+  jobCards         JobCard[]
 }
 
-model Job {
-  id           Int           @id @default(autoincrement())
-  description  String
-  status       JobStatus     @default(PENDING)
-  assignedTo   Int
-  assignedUser User          @relation("AssignedJobs", fields: [assignedTo], references: [id])
-  carId        Int
-  car          Car           @relation(fields: [carId], references: [id])
-  jobServices  JobService[] // Reference the JobService model to represent the many-to-many relationship
-  jobItems     JobItem[] // Track parts used in the job
-  feedback     Feedback?
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  Appointment  Appointment[]
+model CarHistory {
+  id      String   @id @default(cuid())
+  carId   String
+  date    DateTime
+  event   String
+  details String?
+  car     Car      @relation(fields: [carId], references: [id])
 }
 
-model JobService {
-  jobId     Int
-  serviceId Int
-
-  job     Job     @relation(fields: [jobId], references: [id])
-  service Service @relation(fields: [serviceId], references: [id])
-
-  @@id([jobId, serviceId])
+model Inspection {
+  id            String   @id @default(cuid())
+  carId         String
+  date          DateTime
+  odoReading    Int
+  color         String?
+  imageUrl      String?
+  notes         String?
+  inspectorName String?
+  car           Car      @relation(fields: [carId], references: [id])
 }
 
-model Service {
-  id          Int          @id @default(autoincrement())
-  name        String       @unique
-  description String?
-  price       Float
-  jobServices JobService[] // Reference the JobService model to represent the many-to-many relationship
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  Invoice     Invoice?     @relation(fields: [invoiceId], references: [id])
-  invoiceId   Int?
+model JobCard {
+  id                 String      @id @default(cuid())
+  carId              String
+  date               DateTime
+  description        String
+  status             JobStatus
+  cost               Float?
+  car                Car         @relation(fields: [carId], references: [id])
+  partsUsed          Part[]
+  assignedTechnician Technician? @relation(fields: [technicianId], references: [id])
+  technicianId       String?
 }
 
-model Reminder {
-  id        Int      @id @default(autoincrement())
-  message   String
-  remindAt  DateTime
-  clientId  Int
-  client    Client   @relation(fields: [clientId], references: [id])
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-model Modification {
-  id          Int                @id @default(autoincrement())
-  description String
-  status      ModificationStatus @default(PENDING)
-  carId       Int
-  car         Car                @relation(fields: [carId], references: [id])
-  createdAt   DateTime           @default(now())
-  updatedAt   DateTime           @updatedAt
-}
-
-// Appointments for service
-model Appointment {
-  id          Int               @id @default(autoincrement())
-  clientId    Int
-  client      Client            @relation(fields: [clientId], references: [id])
-  carId       Int
-  car         Car               @relation(fields: [carId], references: [id])
-  scheduledAt DateTime
-  status      AppointmentStatus @default(PENDING)
-  jobId       Int? // Linked to a job once the car is in the garage
-  job         Job?              @relation(fields: [jobId], references: [id])
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-}
-
-model Invoice {
-  id        Int           @id @default(autoincrement())
-  amount    Float
-  status    InvoiceStatus @default(PENDING)
-  issuedAt  DateTime      @default(now())
-  dueDate   DateTime
-  clientId  Int
-  client    Client        @relation(fields: [clientId], references: [id])
-  carId     Int
-  car       Car           @relation(fields: [carId], references: [id])
-  services  Service[]
-  payments  Payment[]
-  couponId  Int?
-  coupon    Coupon?       @relation(fields: [couponId], references: [id])
-  createdAt DateTime      @default(now())
-  updatedAt DateTime      @updatedAt
-  User      User?         @relation(fields: [userId], references: [id])
-  userId    Int?
-}
-
-model Payment {
-  id          Int           @id @default(autoincrement())
-  invoiceId   Int
-  invoice     Invoice       @relation(fields: [invoiceId], references: [id])
-  amount      Float
-  paymentDate DateTime      @default(now())
-  method      PaymentMethod
-  status      PaymentStatus @default(PENDING)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  userId      Int?
-  user        User?         @relation(fields: [userId], references: [id])
-}
-
-model InventoryItem {
-  id            Int         @id @default(autoincrement())
-  name          String      @unique
-  description   String?
-  stockLevel    Int         @default(0)
-  price         Float       @default(0.0)
-  minStockLevel Int         @default(10) // Minimum stock level before restocking alert
-  jobItems      JobItem[] // Relation to track usage in jobs
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  supplierId    Int?
-  supplier      Supplier?   @relation(fields: [supplierId], references: [id])
-  OrderItem     OrderItem[]
-}
-
-model JobItem {
-  jobId           Int
-  inventoryItemId Int
-  quantity        Int // Number of items used in the job
-
-  job           Job           @relation(fields: [jobId], references: [id])
-  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
-
-  @@id([jobId, inventoryItemId])
-}
-
-model Supplier {
-  id        Int             @id @default(autoincrement())
+model Part {
+  id        String  @id @default(cuid())
   name      String
-  contact   String?
-  items     InventoryItem[]
-  orders    Order[]
-  createdAt DateTime        @default(now())
-  updatedAt DateTime        @updatedAt
+  quantity  Int
+  cost      Float
+  jobCard   JobCard @relation(fields: [jobCardId], references: [id])
+  jobCardId String
 }
 
-model Order {
-  id           Int         @id @default(autoincrement())
-  supplierId   Int
-  supplier     Supplier    @relation(fields: [supplierId], references: [id])
-  items        OrderItem[]
-  status       OrderStatus @default(PENDING)
-  orderDate    DateTime    @default(now())
-  deliveryDate DateTime?
-  createdAt    DateTime    @default(now())
-  updatedAt    DateTime    @updatedAt
-}
-
-model OrderItem {
-  orderId         Int
-  inventoryItemId Int
-  quantity        Int
-
-  order         Order         @relation(fields: [orderId], references: [id])
-  inventoryItem InventoryItem @relation(fields: [inventoryItemId], references: [id])
-
-  @@id([orderId, inventoryItemId])
-}
-
-model LoyaltyProgram {
-  id        Int         @id @default(autoincrement())
-  clientId  Int         @unique
-  client    Client      @relation(fields: [clientId], references: [id])
-  points    Int         @default(0)
-  tier      LoyaltyTier @default(BRONZE)
-  createdAt DateTime    @default(now())
-  updatedAt DateTime    @updatedAt
-}
-
-// Notifications for users (including WhatsApp)
-model Notification {
-  id               Int              @id @default(autoincrement())
-  message          String
-  notificationType NotificationType
-  isRead           Boolean          @default(false)
-  recipientId      Int
-  user             User             @relation(fields: [recipientId], references: [id])
-  createdAt        DateTime         @default(now())
-  updatedAt        DateTime         @updatedAt
-}
-
-// Reports generated for the garage
-model Report {
-  id          Int        @id @default(autoincrement())
-  reportType  ReportType
-  generatedAt DateTime   @default(now())
-  content     Json
-  createdBy   Int
-  user        User       @relation(fields: [createdBy], references: [id])
-}
-
-// Coupons for discounts
-model Coupon {
-  id            Int       @id @default(autoincrement())
-  code          String    @unique
-  discountValue Float
-  isPercentage  Boolean   @default(false)
-  validFrom     DateTime
-  validTo       DateTime
-  usageLimit    Int       @default(1)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  Invoice       Invoice[]
-}
-
-// Feedback from clients after jobs
-model Feedback {
-  id        Int      @id @default(autoincrement())
-  jobId     Int      @unique // Add @unique to indicate one-to-one relation
-  job       Job      @relation(fields: [jobId], references: [id])
-  rating    Int      @default(0) // Rating from 1 to 5
-  comment   String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-}
-
-// Assets used in the garage
-model Asset {
-  id              Int         @id @default(autoincrement())
+// Technician model
+model Technician {
+  id              String          @id @default(cuid())
   name            String
-  type            AssetType
-  purchaseDate    DateTime
-  lastServiceDate DateTime?
-  status          AssetStatus @default(AVAILABLE)
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+  experienceLevel ExperienceLevel
+  jobCards        JobCard[]
 }
 
-// Messages sent via WhatsApp, SMS, or Email
-model MessageTemplate {
-  id          Int         @id @default(autoincrement())
-  title       String
-  body        String
-  messageType MessageType
-  createdAt   DateTime    @default(now())
-  updatedAt   DateTime    @updatedAt
+model Make {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  models Model[]
+  cars   Car[]
 }
 
-// Audit logs for actions taken by users
-model AuditLog {
-  id          Int      @id @default(autoincrement())
-  action      String
-  entity      String // The entity type that was affected (User, Job, etc.)
-  entityId    Int
-  performedBy Int
-  user        User     @relation(fields: [performedBy], references: [id])
-  timestamp   DateTime @default(now())
-  details     String?
+model Model {
+  id     String @id @default(cuid())
+  name   String @unique
+  makeId String
+  make   Make   @relation(fields: [makeId], references: [id])
+  cars   Car[] // Connects to Car model
 }
 
-// Feature toggle system for enabling/disabling modular features
-model Feature {
-  id        Int      @id @default(autoincrement())
-  name      String   @unique
-  enabled   Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+enum TransmissionType {
+  Automatic
+  Manual
+}
+
+enum ExperienceLevel {
+  Junior
+  Intermediate
+  Senior
 }
