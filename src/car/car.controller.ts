@@ -6,30 +6,34 @@ import { CarStatus, Prisma } from '@prisma/client';
 export class CarController {
     constructor(private readonly carService: CarService) { }
 
+    // Create a new car
     @Post()
     async createCar(@Body() createCarDto: Prisma.CarCreateInput) {
         return this.carService.createCar(createCarDto);
     }
 
-
+    // Get all cars
     @Get()
     async getAllCars() {
         return this.carService.findAllCars();
     }
 
+    // Get all car makes
     @Get('/makes')
     async getAllMakes() {
         return this.carService.findAllMakes();
     }
 
-    @Get('limit')
-    async findAllCarL(
-        @Query('page') page = 1,
-        @Query('limit') limit = 10
+    // Get paginated cars
+    @Get('/paginate')
+    async findAllCarsPaginated(
+        @Query('page') page: number = 1,
+        @Query('limit') limit: number = 10
     ) {
-        return this.carService.findAllCarsL({ page: Number(page), limit: Number(limit) });
+        return this.carService.findAllCarsL({ page, limit });
     }
 
+    // Update the status of a specific car
     @Put(':carId/status')
     async updateCarStatus(
         @Param('carId') carId: string,
@@ -38,10 +42,10 @@ export class CarController {
         return this.carService.updateCarStatus(carId, newStatus);
     }
 
-    // Get all cars by client ID
-    @Get('/client/:clientId')
-    async getCarsByClient(@Param('clientId') clientId: string) {
-        return this.carService.getCarsByClient(clientId);
+    // Get all cars associated with a specific client account ID
+    @Get('/client/:clientAccountId')
+    async getCarsByClient(@Param('clientAccountId') clientAccountId: string) {
+        return this.carService.getCarsByClient(clientAccountId);
     }
 
     // Get a specific car by car ID
@@ -50,6 +54,7 @@ export class CarController {
         return this.carService.getCarById(carId);
     }
 
+    // Delete a specific car by car ID
     @Delete('/:id')
     async deleteCar(@Param('id') carId: string) {
         return this.carService.deleteCar(carId);

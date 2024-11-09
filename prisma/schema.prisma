@@ -7,16 +7,43 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// Enums
 enum UserRole {
   ADMIN
   EMPLOYEE
 }
 
-enum JobStatus {
+enum AccountClassification {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountType {
+  CURRENT_ASSET
+  FIXED_ASSET
+  CURRENT_LIABILITY
+  LONG_TERM_LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+  COST_OF_GOODS_SOLD
+  OTHER_INCOME
+  OTHER_EXPENSE
+}
+
+enum PurchaseOrderStatus {
+  ORDERED
+  RECEIVED
+  PENDING_PAYMENT
+}
+
+enum InvoiceStatus {
   PENDING
-  IN_PROGRESS
-  COMPLETED
-  CANCELLED
+  PAID
+  OVERDUE
 }
 
 enum CarStatus {
@@ -34,26 +61,25 @@ enum TransmissionType {
   Manual
 }
 
+enum EntryType {
+  DEBIT
+  CREDIT
+}
+
+enum JobStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
 enum ExperienceLevel {
   Junior
   Intermediate
   Senior
 }
 
-enum InventoryStatus {
-  IN_STOCK
-  OUT_OF_STOCK
-  LOW_STOCK
-}
-
-enum AccountType {
-  ASSET
-  LIABILITY
-  EQUITY
-  REVENUE
-  EXPENSE
-}
-
+// User model
 model User {
   id        Int      @id @default(autoincrement())
   mobile    String   @unique
@@ -65,49 +91,143 @@ model User {
   isDeleted Boolean  @default(false)
 }
 
-model Client {
-  id          String         @id @default(cuid())
-  companyName String?
-  taxId       String?
-  firstName   String
-  lastName    String
-  phoneNumber String
-  email       String         @unique
-  addressId   String?        @unique
-  address     Address?       @relation(fields: [addressId], references: [id])
-  notes       String?
-  cars        Car[]
-  accountId   Int
-  account     ChartOfAccount @relation(fields: [accountId], references: [id])
+// Chart of Accounts and related accounting models
+model ChartOfAccount {
+  id                 String                @id @default(uuid())
+  name               String                @unique
+  accountNumber      String?               @unique
+  classification     AccountClassification
+  accountType        AccountType
+  parentAccountId    String?               @db.VarChar(36)
+  parentAccount      ChartOfAccount?       @relation("SubAccounts", fields: [parentAccountId], references: [id])
+  subAccounts        ChartOfAccount[]      @relation("SubAccounts")
+  transactions       JournalEntry[]        @relation("AccountTransactions")
+  accountReceivables AccountReceivable[]
+  accountPayables    AccountPayable[]
+  balance            Float                 @default(0)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  JournalLine        JournalLine[]         @relation("AccountTransactions")
+}
+
+model JournalEntry {
+  id              String           @id @default(uuid())
+  transactionDate DateTime
+  description     String
+  journalLines    JournalLine[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  ChartOfAccount  ChartOfAccount[] @relation("AccountTransactions")
+}
+
+model JournalLine {
+  id        String         @id @default(uuid())
+  entryId   String
+  entry     JournalEntry   @relation(fields: [entryId], references: [id])
+  accountId String
+  account   ChartOfAccount @relation("AccountTransactions", fields: [accountId], references: [id])
+  debit     Float          @default(0)
+  credit    Float          @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// Accounts Receivable and Payable
+model AccountReceivable {
+  id               String          @id @default(uuid())
+  clientName       String
+  companyName      String?
+  taxId            String?
+  phoneNumber      String          @unique
+  email            String?
+  notes            String?
+  chartAccountId   String
+  addressId        String
+  address          Address         @relation(fields: [addressId], references: [id])
+  invoices         Invoice[]
+  Car              Car[]
+  ChartOfAccount   ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
+  chartOfAccountId String?
 }
 
 model Address {
-  id            String  @id @default(cuid())
-  country       String
-  city          String
-  streetAddress String
-  client        Client?
+  id                String              @id @default(cuid())
+  country           String
+  city              String
+  streetAddress     String
+  AccountReceivable AccountReceivable[]
 }
 
+model AccountPayable {
+  id             String          @id @default(uuid())
+  supplierName   String
+  chartAccountId String
+  chartAccount   ChartOfAccount  @relation(fields: [chartAccountId], references: [id])
+  purchases      PurchaseOrder[]
+
+  InventoryItem InventoryItem[] @relation("SupplierAccount")
+}
+
+model Invoice {
+  id        String            @id @default(uuid())
+  accountId String
+  account   AccountReceivable @relation(fields: [accountId], references: [id])
+  amount    Float
+  dueDate   DateTime
+  status    InvoiceStatus
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model PurchaseOrder {
+  id        String              @id @default(uuid())
+  accountId String
+  account   AccountPayable      @relation(fields: [accountId], references: [id])
+  amount    Float
+  orderDate DateTime
+  status    PurchaseOrderStatus
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  InventoryItem InventoryItem[] @relation("InventoryPurchases")
+}
+
+// Car and related models
 model Car {
-  id               String           @id @default(cuid())
+  id               String            @id @default(cuid())
   makeId           String
   modelId          String
   year             Int
-  vin              String?          @unique
+  vin              String?           @unique
   licenseNumber    String?
-  status           CarStatus        @default(CHECKED_IN)
+  status           CarStatus         @default(CHECKED_IN)
   transmissionType TransmissionType
-  clientId         String
-  client           Client           @relation(fields: [clientId], references: [id])
-  make             Make             @relation(fields: [makeId], references: [id])
-  model            Model            @relation(fields: [modelId], references: [id])
+  clientAccountId  String
+  clientAccount    AccountReceivable @relation(fields: [clientAccountId], references: [id])
+  make             Make              @relation(fields: [makeId], references: [id])
+  model            Model             @relation(fields: [modelId], references: [id])
   notes            String?
   history          CarHistory[]
   inspections      Inspection[]
   jobCards         JobCard[]
 }
 
+model Make {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  models Model[]
+  cars   Car[]
+}
+
+model Model {
+  id     String @id @default(cuid())
+  name   String @unique
+  makeId String
+  make   Make   @relation(fields: [makeId], references: [id])
+  cars   Car[]
+}
+
+// Car History, Inspection, and Job Card
 model CarHistory {
   id      String   @id @default(cuid())
   carId   String
@@ -130,20 +250,19 @@ model Inspection {
 }
 
 model JobCard {
-  id                 String        @id @default(cuid())
+  id                 String      @id @default(cuid())
   carId              String
   date               DateTime
   description        String
   status             JobStatus
   cost               Float?
-  car                Car           @relation(fields: [carId], references: [id])
+  car                Car         @relation(fields: [carId], references: [id])
   partsUsed          Part[]
-  assignedTechnician Technician?   @relation(fields: [technicianId], references: [id])
+  assignedTechnician Technician? @relation(fields: [technicianId], references: [id])
   technicianId       String?
-  journalEntryId     Int?
-  journalEntry       JournalEntry? @relation(fields: [journalEntryId], references: [id])
 }
 
+// Parts and Technicians
 model Part {
   id        String  @id @default(cuid())
   name      String
@@ -160,19 +279,39 @@ model Technician {
   jobCards        JobCard[]
 }
 
-model Make {
-  id     String  @id @default(cuid())
-  name   String  @unique
-  models Model[]
-  cars   Car[]
+model InventoryItem {
+  id                String                 @id @default(cuid())
+  name              String
+  quantity          Int
+  unitPrice         Float
+  cost              Float
+  sellingPrice      Float
+  status            InventoryStatus
+  reorderLevel      Int
+  lastRestocked     DateTime?
+  location          String?
+  barcode           String?
+  sku               String?
+  unitOfMeasure     String?
+  minOrderQuantity  Int?
+  batchNumber       String?
+  categoryId        Int
+  category          Category               @relation(fields: [categoryId], references: [id])
+  supplierAccountId String
+  supplierAccount   AccountPayable         @relation("SupplierAccount", fields: [supplierAccountId], references: [id])
+  purchases         PurchaseOrder[]        @relation("InventoryPurchases")
+  transactions      InventoryTransaction[]
 }
 
-model Model {
-  id     String @id @default(cuid())
-  name   String @unique
-  makeId String
-  make   Make   @relation(fields: [makeId], references: [id])
-  cars   Car[]
+model InventoryTransaction {
+  id              String          @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem   @relation(fields: [inventoryItemId], references: [id])
+  transactionDate DateTime        @default(now())
+  transactionType TransactionType
+  quantityChanged Int
+  newQuantity     Int
+  description     String
 }
 
 model Category {
@@ -182,81 +321,17 @@ model Category {
   parentCategoryId Int?
   parentCategory   Category?       @relation("Subcategories", fields: [parentCategoryId], references: [id])
   subcategories    Category[]      @relation("Subcategories")
-  accountId        Int?
-  account          ChartOfAccount? @relation(fields: [accountId], references: [id])
   items            InventoryItem[]
 }
 
-model Supplier {
-  id          Int             @id @default(autoincrement())
-  name        String
-  contactInfo String?
-  address     String?
-  items       InventoryItem[]
-  accountId   Int
-  account     ChartOfAccount  @relation(fields: [accountId], references: [id])
+enum InventoryStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  LOW_STOCK
 }
 
-model InventoryItem {
-  id               Int             @id @default(autoincrement())
-  name             String
-  quantity         Int
-  description      String
-  unitPrice        Float
-  cost             Float
-  sellingPrice     Float
-  status           InventoryStatus
-  reorderLevel     Int
-  lastRestocked    DateTime?
-  location         String?
-  barcode          String?
-  sku              String?
-  unitOfMeasure    String?
-  minOrderQuantity Int?
-  batchNumber      String?
-  categoryId       Int
-  category         Category        @relation(fields: [categoryId], references: [id])
-  supplierId       Int
-  supplier         Supplier        @relation(fields: [supplierId], references: [id])
-
-  ChartOfAccount ChartOfAccount[]
-}
-
-model ChartOfAccount {
-  id               Int               @id @default(autoincrement())
-  name             String
-  accountCode      String            @unique
-  accountType      AccountType
-  parentAccountId  Int?
-  parentAccount    ChartOfAccount?   @relation("SubAccounts", fields: [parentAccountId], references: [id])
-  subAccounts      ChartOfAccount[]  @relation("SubAccounts")
-  clients          Client[]
-  suppliers        Supplier[]
-  categories       Category[]
-  inventoryItems   InventoryItem[]
-  journalLineItems JournalLineItem[]
-}
-
-model JournalEntry {
-  id          Int               @id @default(autoincrement())
-  date        DateTime          @default(now())
-  description String
-  lineItems   JournalLineItem[]
-
-  JobCard JobCard[]
-}
-
-model JournalLineItem {
-  id             Int            @id @default(autoincrement())
-  entryId        Int
-  accountId      Int
-  amount         Float
-  type           EntryType // Debit or Credit
-  JournalEntry   JournalEntry   @relation(fields: [entryId], references: [id])
-  ChartOfAccount ChartOfAccount @relation(fields: [accountId], references: [id])
-}
-
-enum EntryType {
-  DEBIT
-  CREDIT
+enum TransactionType {
+  PURCHASE
+  SALE
+  ADJUSTMENT
 }
