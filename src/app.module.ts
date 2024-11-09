@@ -8,6 +8,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ClientModule } from './client/client.module';
 import { CarModule } from './car/car.module';
 import { BulkModule } from './bulk/bulk.module';
+import { InventoryModule } from './inventory/inventory.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { BulkModule } from './bulk/bulk.module';
     UserModule,
     ClientModule,
     CarModule,
-    BulkModule,],
+    BulkModule,
+    InventoryModule,],
   controllers: [AppController],
   providers: [AppService],
 })
