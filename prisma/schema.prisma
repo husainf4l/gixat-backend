@@ -108,6 +108,54 @@ model ChartOfAccount {
   createdAt          DateTime              @default(now())
   updatedAt          DateTime              @updatedAt
   JournalLine        JournalLine[]         @relation("AccountTransactions")
+  inventoryItems     InventoryItem[]
+}
+
+model InventoryItem {
+  id                String                 @id @default(cuid())
+  name              String
+  quantity          Int
+  unitPrice         Float
+  cost              Float
+  sellingPrice      Float
+  status            InventoryStatus
+  reorderLevel      Int
+  lastRestocked     DateTime?
+  location          String?
+  barcode           String?
+  sku               String?
+  unitOfMeasure     String?
+  minOrderQuantity  Int?
+  batchNumber       String?
+  categoryId        Int
+  category          Category               @relation(fields: [categoryId], references: [id])
+  supplierAccountId String
+  supplierAccount   AccountPayable         @relation("SupplierAccount", fields: [supplierAccountId], references: [id])
+  purchases         PurchaseOrder[]        @relation("InventoryPurchases")
+  transactions      InventoryTransaction[]
+  assetAccountId    String
+  assetAccount      ChartOfAccount          @relation(fields: [assetAccountId], references: [id])
+}
+
+model InventoryTransaction {
+  id              String          @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem   @relation(fields: [inventoryItemId], references: [id])
+  transactionDate DateTime        @default(now())
+  transactionType TransactionType
+  quantityChanged Int
+  newQuantity     Int
+  description     String
+}
+
+model Category {
+  id               Int             @id @default(autoincrement())
+  name             String
+  description      String?
+  parentCategoryId Int?
+  parentCategory   Category?       @relation("Subcategories", fields: [parentCategoryId], references: [id])
+  subcategories    Category[]      @relation("Subcategories")
+  items            InventoryItem[]
 }
 
 model JournalEntry {
@@ -277,50 +325,7 @@ model Technician {
   jobCards        JobCard[]
 }
 
-model InventoryItem {
-  id                String                 @id @default(cuid())
-  name              String
-  quantity          Int
-  unitPrice         Float
-  cost              Float
-  sellingPrice      Float
-  status            InventoryStatus
-  reorderLevel      Int
-  lastRestocked     DateTime?
-  location          String?
-  barcode           String?
-  sku               String?
-  unitOfMeasure     String?
-  minOrderQuantity  Int?
-  batchNumber       String?
-  categoryId        Int
-  category          Category               @relation(fields: [categoryId], references: [id])
-  supplierAccountId String
-  supplierAccount   AccountPayable         @relation("SupplierAccount", fields: [supplierAccountId], references: [id])
-  purchases         PurchaseOrder[]        @relation("InventoryPurchases")
-  transactions      InventoryTransaction[]
-}
 
-model InventoryTransaction {
-  id              String          @id @default(cuid())
-  inventoryItemId String
-  inventoryItem   InventoryItem   @relation(fields: [inventoryItemId], references: [id])
-  transactionDate DateTime        @default(now())
-  transactionType TransactionType
-  quantityChanged Int
-  newQuantity     Int
-  description     String
-}
-
-model Category {
-  id               Int             @id @default(autoincrement())
-  name             String
-  description      String?
-  parentCategoryId Int?
-  parentCategory   Category?       @relation("Subcategories", fields: [parentCategoryId], references: [id])
-  subcategories    Category[]      @relation("Subcategories")
-  items            InventoryItem[]
-}
 
 enum InventoryStatus {
   IN_STOCK
