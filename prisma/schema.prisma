@@ -127,14 +127,15 @@ model InventoryItem {
   unitOfMeasure     String?
   minOrderQuantity  Int?
   batchNumber       String?
-  categoryId        Int
+  categoryId        String
+  description       String?
   category          Category               @relation(fields: [categoryId], references: [id])
   supplierAccountId String
   supplierAccount   AccountPayable         @relation("SupplierAccount", fields: [supplierAccountId], references: [id])
   purchases         PurchaseOrder[]        @relation("InventoryPurchases")
   transactions      InventoryTransaction[]
   assetAccountId    String
-  assetAccount      ChartOfAccount          @relation(fields: [assetAccountId], references: [id])
+  assetAccount      ChartOfAccount         @relation(fields: [assetAccountId], references: [id])
 }
 
 model InventoryTransaction {
@@ -149,10 +150,10 @@ model InventoryTransaction {
 }
 
 model Category {
-  id               Int             @id @default(autoincrement())
+  id               String          @id @default(cuid())
   name             String
   description      String?
-  parentCategoryId Int?
+  parentCategoryId String?
   parentCategory   Category?       @relation("Subcategories", fields: [parentCategoryId], references: [id])
   subcategories    Category[]      @relation("Subcategories")
   items            InventoryItem[]
@@ -182,19 +183,19 @@ model JournalLine {
 
 // Accounts Receivable and Payable
 model AccountReceivable {
-  id               String          @id @default(uuid())
-  clientName       String
-  companyName      String?
-  taxId            String?
-  phoneNumber      String          @unique
-  email            String?
-  notes            String?
-  chartAccountId   String
-  addressId        String
-  address          Address         @relation(fields: [addressId], references: [id])
-  invoices         Invoice[]
-  Car              Car[]
-  ChartOfAccount   ChartOfAccount @relation(fields: [chartAccountId], references: [id])
+  id             String         @id @default(uuid())
+  clientName     String
+  companyName    String?
+  taxId          String?
+  phoneNumber    String         @unique
+  email          String?
+  notes          String?
+  chartAccountId String
+  addressId      String
+  address        Address        @relation(fields: [addressId], references: [id])
+  invoices       Invoice[]
+  Car            Car[]
+  ChartOfAccount ChartOfAccount @relation(fields: [chartAccountId], references: [id])
 }
 
 model Address {
@@ -307,6 +308,9 @@ model JobCard {
   partsUsed          Part[]
   assignedTechnician Technician? @relation(fields: [technicianId], references: [id])
   technicianId       String?
+  createdAt          DateTime    @default(now()) // Automatically set the current time when created
+  updatedAt          DateTime    @updatedAt // Automatically update this field when the record is updated
+  duration           Int? // Duration in minutes, can be null if the job is not completed
 }
 
 model Part {
@@ -324,8 +328,6 @@ model Technician {
   experienceLevel ExperienceLevel
   jobCards        JobCard[]
 }
-
-
 
 enum InventoryStatus {
   IN_STOCK

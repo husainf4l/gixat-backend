@@ -18,6 +18,10 @@ import { JobCardController } from './job-card/job-card.controller';
 import { JobCardService } from './job-card/job-card.service';
 import { ChartOfAccountsModule } from './chart-of-accounts/chart-of-accounts.module';
 import { AccountReceivableModule } from './account-receivable/account-receivable.module';
+import { CatgoryModule } from './catgory/catgory.module';
+import { AccountPayableModule } from './account-payable/account-payable.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { QuickbooksModule } from './quickbooks/quickbooks.module';
 
 @Module({
   imports: [
@@ -33,8 +37,12 @@ import { AccountReceivableModule } from './account-receivable/account-receivable
     JobCardModule,
     AccountModule,
     ChartOfAccountsModule,
-    AccountReceivableModule,],
-  controllers: [AppController,  JobCardController, JournalController],
-  providers: [AppService,  JobCardService, JournalService, AccountService],
+    AccountReceivableModule,
+    CatgoryModule,
+    AccountPayableModule,
+    DashboardModule,
+    QuickbooksModule,],
+  controllers: [AppController, JobCardController, JournalController],
+  providers: [AppService, JobCardService, JournalService, AccountService],
 })
 export class AppModule { }

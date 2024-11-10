@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, Query } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { Prisma } from '@prisma/client';
 
@@ -35,4 +35,10 @@ export class InventoryController {
     async createCategory(@Body() data: Prisma.CategoryCreateInput) {
         return this.inventoryService.createCategory(data);
     }
+
+    @Get('search')
+    searchInventory(@Query('query') query: string) {
+        return this.inventoryService.searchInventoryItems(query);
+    }
+
 }
