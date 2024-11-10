@@ -24,6 +24,8 @@ export class CarController {
         return this.carService.findAllMakes();
     }
 
+    
+
     // Get paginated cars
     @Get('/paginate')
     async findAllCarsPaginated(

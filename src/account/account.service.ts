@@ -58,7 +58,7 @@ export class AccountService {
     }
 
     // Update a client account by ID
-    async updateAccount(id: string, data: Prisma.ChartOfAccountUpdateInput) {
+    async updateAccount(id: string, data: Prisma.AccountReceivableUpdateInput) {
         return this.prisma.chartOfAccount.update({
             where: { id },
             data,

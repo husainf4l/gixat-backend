@@ -14,11 +14,10 @@ import { JobCardModule } from './job-card/job-card.module';
 import { JournalModule } from './journal/journal.module';
 import { JournalController } from './journal/journal.controller';
 import { JournalService } from './journal/journal.service';
-import { ChartOfAccountModule } from './chart-of-account/chart-of-account.module';
-import { ChartOfAccountController } from './chart-of-account/chart-of-account.controller';
 import { JobCardController } from './job-card/job-card.controller';
 import { JobCardService } from './job-card/job-card.service';
-import { ChartOfAccountService } from './chart-of-account/chart-of-account.service';
+import { ChartOfAccountsModule } from './chart-of-accounts/chart-of-accounts.module';
+import { AccountReceivableModule } from './account-receivable/account-receivable.module';
 
 @Module({
   imports: [
@@ -30,11 +29,12 @@ import { ChartOfAccountService } from './chart-of-account/chart-of-account.servi
     CarModule,
     BulkModule,
     InventoryModule,
-    ChartOfAccountModule,
     JournalModule,
     JobCardModule,
-    AccountModule,],
-  controllers: [AppController, ChartOfAccountController, JobCardController, JournalController],
-  providers: [AppService, ChartOfAccountService, JobCardService, JournalService, AccountService],
+    AccountModule,
+    ChartOfAccountsModule,
+    AccountReceivableModule,],
+  controllers: [AppController,  JobCardController, JournalController],
+  providers: [AppService,  JobCardService, JournalService, AccountService],
 })
 export class AppModule { }

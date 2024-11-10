@@ -30,29 +30,30 @@ export class CarService {
         });
     }
 
-    // Retrieve cars with pagination, including related details
     async findAllCarsL({ page, limit }: { page: number; limit: number }) {
         const skip = (page - 1) * limit;
         const cars = await this.prisma.car.findMany({
-            skip,
-            take: limit,
-            include: {
-                make: true,
-                model: true,
-                clientAccount: true,
-                jobCards: true,
-            },
+          skip: skip,
+          take: parseInt(limit.toString(), 10),  // Ensures the value is an integer
+          include: {
+            make: true,
+            model: true,
+            clientAccount: true,
+            jobCards: true,
+          },
         });
-
+      
         const totalCars = await this.prisma.car.count();
-
+      
         return {
-            data: cars,
-            total: totalCars,
-            currentPage: page,
-            totalPages: Math.ceil(totalCars / limit),
+          data: cars,
+          total: totalCars,
+          currentPage: page,
+          totalPages: Math.ceil(totalCars / limit),
         };
-    }
+      }
+      
+    
 
     // Update the status of a car
     async updateCarStatus(carId: string, newStatus: CarStatus) {

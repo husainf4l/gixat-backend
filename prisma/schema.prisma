@@ -146,8 +146,7 @@ model AccountReceivable {
   address          Address         @relation(fields: [addressId], references: [id])
   invoices         Invoice[]
   Car              Car[]
-  ChartOfAccount   ChartOfAccount? @relation(fields: [chartOfAccountId], references: [id])
-  chartOfAccountId String?
+  ChartOfAccount   ChartOfAccount @relation(fields: [chartAccountId], references: [id])
 }
 
 model Address {
@@ -262,7 +261,6 @@ model JobCard {
   technicianId       String?
 }
 
-// Parts and Technicians
 model Part {
   id        String  @id @default(cuid())
   name      String
