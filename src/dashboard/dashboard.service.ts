@@ -78,4 +78,20 @@ export class DashboardService {
     getPartsAwaiting() {
         return this.partsAwaiting;
     }
+
+    getCompanyData(id: string) {
+        return this.prisma.user.findUnique({
+            where: { id: id },
+            select: {
+                company: {
+                    select: {
+                        id: true,
+                        quickbooksRefreshToken: true,
+                        quickbooksToken: true,
+                        quickbooksTokenExpiry: true
+                    }
+                }
+            }
+        });
+    }
 }

@@ -1,5 +1,4 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { CarService } from 'src/car/car.service';
 import { CreateMakeModelDto } from './dto/create-make-model';
 import { BulkService } from './bulk.service';
 

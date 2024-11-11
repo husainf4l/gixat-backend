@@ -1,6 +1,5 @@
 import { Controller, Post, Get, Put, Delete, Param, Body, Query, HttpCode, HttpStatus, Patch } from '@nestjs/common';
 import { UserService } from './user.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from '@prisma/client';
 
@@ -17,8 +16,8 @@ export class UserController {
 
     @Get(':id')
     @HttpCode(HttpStatus.OK)
-    async findOne(@Param('id') id: number): Promise<Omit<User, 'password' | 'updatedAt'>> {
-        return this.userService.findOne(+id);
+    async findOne(@Param('id') id: string): Promise<Omit<User, 'password' | 'updatedAt'>> {
+        return this.userService.findOne(id);
     }
 
     @Get('by-mobile')
@@ -29,13 +28,13 @@ export class UserController {
 
     @Patch(':id')
     @HttpCode(HttpStatus.OK)
-    async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt'>> {
-        return this.userService.update(+id, updateUserDto);
+    async update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt'>> {
+        return this.userService.update(id, updateUserDto);
     }
 
     @Delete(':id')
     @HttpCode(HttpStatus.NO_CONTENT)
-    async remove(@Param('id') id: number): Promise<void> {
+    async remove(@Param('id') id: string): Promise<void> {
         await this.userService.remove(id);
     }
 }

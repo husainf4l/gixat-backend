@@ -25,7 +25,7 @@ export class UserService {
     }
 
     // Fetch a single user by ID
-    async findOne(id: number): Promise<Omit<User, 'password' | 'updatedAt'>> {
+    async findOne(id: string): Promise<Omit<User, 'password' | 'updatedAt'>> {
         const user = await this.prisma.user.findUnique({
             where: { id },
             select: {
@@ -60,7 +60,7 @@ export class UserService {
     }
 
     // Update user by ID
-    async update(id: number, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt'>> {
+    async update(id: string, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt'>> {
         const { mobile, name, password } = updateUserDto;
 
         let hashedPassword;
@@ -88,7 +88,7 @@ export class UserService {
     }
 
     // Soft delete a user by ID
-    async remove(id: number): Promise<void> {
+    async remove(id: string): Promise<void> {
         await this.prisma.user.delete({
             where: { id },
         });

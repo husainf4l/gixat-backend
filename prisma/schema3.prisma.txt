@@ -1,0 +1,360 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Enums
+enum UserRole {
+  ADMIN
+  EMPLOYEE
+}
+
+enum AccountClassification {
+  ASSET
+  LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+}
+
+enum AccountType {
+  CURRENT_ASSET
+  FIXED_ASSET
+  CURRENT_LIABILITY
+  LONG_TERM_LIABILITY
+  EQUITY
+  REVENUE
+  EXPENSE
+  COST_OF_GOODS_SOLD
+  OTHER_INCOME
+  OTHER_EXPENSE
+}
+
+enum PurchaseOrderStatus {
+  ORDERED
+  RECEIVED
+  PENDING_PAYMENT
+}
+
+enum InvoiceStatus {
+  PENDING
+  PAID
+  OVERDUE
+}
+
+enum CarStatus {
+  CHECKED_IN
+  DIAGNOSIS
+  AWAITING_PARTS
+  IN_SERVICE
+  READY_FOR_PICKUP
+  PICKED_UP
+  CANCELLED
+}
+
+enum TransmissionType {
+  Automatic
+  Manual
+}
+
+enum EntryType {
+  DEBIT
+  CREDIT
+}
+
+enum JobStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ExperienceLevel {
+  Junior
+  Intermediate
+  Senior
+}
+
+// User model
+model User {
+  id        Int      @id @default(autoincrement())
+  mobile    String   @unique
+  name      String?
+  password  String
+  role      UserRole
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Company {
+  id           String      @id @default(cuid())
+  companyName  String
+  users        User[]
+  quickbooks   Quickbooks? @relation(fields: [quickbooksId], references: [id])
+  quickbooksId String?     @unique
+}
+
+model Quickbooks {
+  id           String   @id @default(cuid())
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  companyId    String?
+  company      Company? @relation
+}
+
+// Chart of Accounts and related accounting models
+model ChartOfAccount {
+  id                 String                @id @default(uuid())
+  name               String                @unique
+  accountNumber      String?               @unique
+  classification     AccountClassification
+  accountType        AccountType
+  parentAccountId    String?               @db.VarChar(36)
+  parentAccount      ChartOfAccount?       @relation("SubAccounts", fields: [parentAccountId], references: [id])
+  subAccounts        ChartOfAccount[]      @relation("SubAccounts")
+  transactions       JournalEntry[]        @relation("AccountTransactions")
+  accountReceivables AccountReceivable[]
+  accountPayables    AccountPayable[]
+  balance            Float                 @default(0)
+  createdAt          DateTime              @default(now())
+  updatedAt          DateTime              @updatedAt
+  JournalLine        JournalLine[]         @relation("AccountTransactions")
+  inventoryItems     InventoryItem[]
+}
+
+model InventoryItem {
+  id                String                 @id @default(cuid())
+  name              String
+  quantity          Int
+  unitPrice         Float
+  cost              Float
+  sellingPrice      Float
+  status            InventoryStatus
+  reorderLevel      Int
+  lastRestocked     DateTime?
+  location          String?
+  barcode           String?
+  sku               String?
+  unitOfMeasure     String?
+  minOrderQuantity  Int?
+  batchNumber       String?
+  categoryId        String
+  description       String?
+  category          Category               @relation(fields: [categoryId], references: [id])
+  supplierAccountId String
+  supplierAccount   AccountPayable         @relation("SupplierAccount", fields: [supplierAccountId], references: [id])
+  purchases         PurchaseOrder[]        @relation("InventoryPurchases")
+  transactions      InventoryTransaction[]
+  assetAccountId    String
+  assetAccount      ChartOfAccount         @relation(fields: [assetAccountId], references: [id])
+}
+
+model InventoryTransaction {
+  id              String          @id @default(cuid())
+  inventoryItemId String
+  inventoryItem   InventoryItem   @relation(fields: [inventoryItemId], references: [id])
+  transactionDate DateTime        @default(now())
+  transactionType TransactionType
+  quantityChanged Int
+  newQuantity     Int
+  description     String
+}
+
+model Category {
+  id               String          @id @default(cuid())
+  name             String
+  description      String?
+  parentCategoryId String?
+  parentCategory   Category?       @relation("Subcategories", fields: [parentCategoryId], references: [id])
+  subcategories    Category[]      @relation("Subcategories")
+  items            InventoryItem[]
+}
+
+model JournalEntry {
+  id              String           @id @default(uuid())
+  transactionDate DateTime
+  description     String
+  journalLines    JournalLine[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  ChartOfAccount  ChartOfAccount[] @relation("AccountTransactions")
+}
+
+model JournalLine {
+  id        String         @id @default(uuid())
+  entryId   String
+  entry     JournalEntry   @relation(fields: [entryId], references: [id])
+  accountId String
+  account   ChartOfAccount @relation("AccountTransactions", fields: [accountId], references: [id])
+  debit     Float          @default(0)
+  credit    Float          @default(0)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+}
+
+// Accounts Receivable and Payable
+model AccountReceivable {
+  id             String         @id @default(uuid())
+  clientName     String
+  companyName    String?
+  taxId          String?
+  phoneNumber    String         @unique
+  email          String?
+  notes          String?
+  chartAccountId String
+  addressId      String
+  address        Address        @relation(fields: [addressId], references: [id])
+  invoices       Invoice[]
+  Car            Car[]
+  ChartOfAccount ChartOfAccount @relation(fields: [chartAccountId], references: [id])
+}
+
+model Address {
+  id                String              @id @default(cuid())
+  country           String
+  city              String
+  streetAddress     String
+  AccountReceivable AccountReceivable[]
+}
+
+model AccountPayable {
+  id             String          @id @default(uuid())
+  supplierName   String
+  chartAccountId String
+  chartAccount   ChartOfAccount  @relation(fields: [chartAccountId], references: [id])
+  purchases      PurchaseOrder[]
+
+  InventoryItem InventoryItem[] @relation("SupplierAccount")
+}
+
+model Invoice {
+  id        String            @id @default(uuid())
+  accountId String
+  account   AccountReceivable @relation(fields: [accountId], references: [id])
+  amount    Float
+  dueDate   DateTime
+  status    InvoiceStatus
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+}
+
+model PurchaseOrder {
+  id        String              @id @default(uuid())
+  accountId String
+  account   AccountPayable      @relation(fields: [accountId], references: [id])
+  amount    Float
+  orderDate DateTime
+  status    PurchaseOrderStatus
+  createdAt DateTime            @default(now())
+  updatedAt DateTime            @updatedAt
+
+  InventoryItem InventoryItem[] @relation("InventoryPurchases")
+}
+
+// Car and related models
+model Car {
+  id               String            @id @default(cuid())
+  makeId           String
+  modelId          String
+  year             Int
+  vin              String?           @unique
+  licenseNumber    String?
+  status           CarStatus         @default(CHECKED_IN)
+  transmissionType TransmissionType
+  clientAccountId  String
+  clientAccount    AccountReceivable @relation(fields: [clientAccountId], references: [id])
+  make             Make              @relation(fields: [makeId], references: [id])
+  model            Model             @relation(fields: [modelId], references: [id])
+  notes            String?
+  history          CarHistory[]
+  inspections      Inspection[]
+  jobCards         JobCard[]
+}
+
+model Make {
+  id     String  @id @default(cuid())
+  name   String  @unique
+  models Model[]
+  cars   Car[]
+}
+
+model Model {
+  id     String @id @default(cuid())
+  name   String @unique
+  makeId String
+  make   Make   @relation(fields: [makeId], references: [id])
+  cars   Car[]
+}
+
+// Car History, Inspection, and Job Card
+model CarHistory {
+  id      String   @id @default(cuid())
+  carId   String
+  date    DateTime
+  event   String
+  details String?
+  car     Car      @relation(fields: [carId], references: [id])
+}
+
+model Inspection {
+  id            String   @id @default(cuid())
+  carId         String
+  date          DateTime
+  odoReading    Int
+  color         String?
+  imageUrl      String?
+  notes         String?
+  inspectorName String?
+  car           Car      @relation(fields: [carId], references: [id])
+}
+
+model JobCard {
+  id                 String      @id @default(cuid())
+  carId              String
+  date               DateTime
+  description        String
+  status             JobStatus
+  cost               Float?
+  car                Car         @relation(fields: [carId], references: [id])
+  partsUsed          Part[]
+  assignedTechnician Technician? @relation(fields: [technicianId], references: [id])
+  technicianId       String?
+  createdAt          DateTime    @default(now()) // Automatically set the current time when created
+  updatedAt          DateTime    @updatedAt // Automatically update this field when the record is updated
+  duration           Int? // Duration in minutes, can be null if the job is not completed
+}
+
+model Part {
+  id        String  @id @default(cuid())
+  name      String
+  quantity  Int
+  cost      Float
+  jobCard   JobCard @relation(fields: [jobCardId], references: [id])
+  jobCardId String
+}
+
+model Technician {
+  id              String          @id @default(cuid())
+  name            String
+  experienceLevel ExperienceLevel
+  jobCards        JobCard[]
+}
+
+enum InventoryStatus {
+  IN_STOCK
+  OUT_OF_STOCK
+  LOW_STOCK
+}
+
+enum TransactionType {
+  PURCHASE
+  SALE
+  ADJUSTMENT
+}

@@ -28,9 +28,9 @@ export class AuthService {
     }
 
     async login(user: any) {
-        const payload = { mobile: user.mobile, sub: user.id, role: user.role };
+        const payload = { mobile: user.mobile, sub: user.id, role: user.role, companyId: user.companyId };
         const token = this.jwtService.sign(payload);
-        return { access_token: token };
+        return { access_token: token, user_id: user.id, companyId: user.companyId };
     }
 
     async verifyToken(token: string): Promise<boolean> {
@@ -42,7 +42,6 @@ export class AuthService {
             return false;
         }
     }
-
 
     async signup(user: SignupRequest) {
         const payload = { name: user.name, mobile: user.mobile, role: user.role, password: user.password };
@@ -69,8 +68,7 @@ export class AuthService {
             },
         });
 
+        // Return token and user_id after successful signup
         return this.login(newUser);
     }
-
-
 }

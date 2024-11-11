@@ -1,4 +1,4 @@
-import { Controller, Get } from '@nestjs/common';
+import { Controller, Get, Param } from '@nestjs/common';
 import { DashboardService } from './dashboard.service';
 
 @Controller('dashboard')
@@ -21,5 +21,11 @@ export class DashboardController {
     @Get('parts-awaiting')
     getPartsAwaiting() {
         return this.dashboardService.getPartsAwaiting();
+    }
+
+
+    @Get('company-data/:id')
+    getCompanyId(@Param('id') id: string) {
+        return this.dashboardService.getCompanyData(id);
     }
 }
