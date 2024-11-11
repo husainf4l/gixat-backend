@@ -86,9 +86,27 @@ model User {
   name      String?
   password  String
   role      UserRole
+  companyId String?
+  company   Company? @relation(fields: [companyId], references: [id])
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  isDeleted Boolean  @default(false)
+}
+
+model Company {
+  id           String      @id @default(cuid())
+  companyName  String
+  users        User[]
+  quickbooks   Quickbooks? @relation(fields: [quickbooksId], references: [id])
+  quickbooksId String?     @unique
+}
+
+model Quickbooks {
+  id           String   @id @default(cuid())
+  accessToken  String
+  refreshToken String
+  expiresAt    DateTime
+  companyId    String?
+  company      Company? @relation
 }
 
 // Chart of Accounts and related accounting models

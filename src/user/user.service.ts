@@ -1,6 +1,5 @@
-import { Injectable, ConflictException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import * as bcrypt from 'bcrypt';
 import { User } from '@prisma/client';
@@ -9,54 +8,24 @@ import { User } from '@prisma/client';
 export class UserService {
     constructor(private readonly prisma: PrismaService) { }
 
-    // Create a new user
-    async create(createUserDto: CreateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
-        const { mobile, password, role, name } = createUserDto;
 
-        // Check if the mobile number is already registered
-        const existingUser = await this.prisma.user.findUnique({
-            where: { mobile },
-        });
-
-        if (existingUser) {
-            throw new ConflictException('Mobile number already registered');
-        }
-
-        // Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // Create the user in the database
-        const user = await this.prisma.user.create({
-            data: {
-                mobile,
-                name,
-                password: hashedPassword,
-                role,
-            },
-        });
-
-        // Exclude password in return
-        delete user.password;
-
-        return user;
-    }
 
     // Fetch all users, excluding password
-    async findAll(): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>[]> {
+    async findAll(): Promise<Omit<User, 'password' | 'updatedAt'>[]> {
         return this.prisma.user.findMany({
-            where: { isDeleted: false },
             select: {
                 id: true,
                 mobile: true,
                 name: true,
                 role: true,
                 createdAt: true,
+                companyId: true
             },
         });
     }
 
     // Fetch a single user by ID
-    async findOne(id: number): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+    async findOne(id: number): Promise<Omit<User, 'password' | 'updatedAt'>> {
         const user = await this.prisma.user.findUnique({
             where: { id },
             select: {
@@ -65,6 +34,8 @@ export class UserService {
                 name: true,
                 role: true,
                 createdAt: true,
+                companyId: true
+
             },
         });
 
@@ -76,7 +47,7 @@ export class UserService {
     }
 
     // Fetch user by mobile (for login or other purposes)
-    async findByMobile(mobile: string): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+    async findByMobile(mobile: string): Promise<Omit<User, 'password' | 'updatedAt'>> {
         const user = await this.prisma.user.findUnique({
             where: { mobile },
         });
@@ -89,7 +60,7 @@ export class UserService {
     }
 
     // Update user by ID
-    async update(id: number, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+    async update(id: number, updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt'>> {
         const { mobile, name, password } = updateUserDto;
 
         let hashedPassword;
@@ -110,17 +81,16 @@ export class UserService {
                 name: true,
                 role: true,
                 createdAt: true,
+                companyId: true
+
             },
         });
     }
 
     // Soft delete a user by ID
     async remove(id: number): Promise<void> {
-        await this.prisma.user.update({
+        await this.prisma.user.delete({
             where: { id },
-            data: {
-                isDeleted: true,
-            },
         });
     }
 }

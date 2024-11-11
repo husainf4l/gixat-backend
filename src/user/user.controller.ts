@@ -8,33 +8,28 @@ import { User } from '@prisma/client';
 export class UserController {
     constructor(private readonly userService: UserService) { }
 
-    @Post()
-    @HttpCode(HttpStatus.CREATED)
-    async create(@Body() createUserDto: CreateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
-        return this.userService.create(createUserDto);
-    }
 
     @Get()
     @HttpCode(HttpStatus.OK)
-    async findAll(): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>[]> {
+    async findAll(): Promise<Omit<User, 'password' | 'updatedAt'>[]> {
         return this.userService.findAll();
     }
 
     @Get(':id')
     @HttpCode(HttpStatus.OK)
-    async findOne(@Param('id') id: number): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+    async findOne(@Param('id') id: number): Promise<Omit<User, 'password' | 'updatedAt'>> {
         return this.userService.findOne(+id);
     }
 
     @Get('by-mobile')
     @HttpCode(HttpStatus.OK)
-    async findByMobile(@Query('mobile') mobile: string): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+    async findByMobile(@Query('mobile') mobile: string): Promise<Omit<User, 'password' | 'updatedAt'>> {
         return this.userService.findByMobile(mobile);
     }
 
     @Patch(':id')
     @HttpCode(HttpStatus.OK)
-    async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt' | 'isDeleted'>> {
+    async update(@Param('id') id: number, @Body() updateUserDto: UpdateUserDto): Promise<Omit<User, 'password' | 'updatedAt'>> {
         return this.userService.update(+id, updateUserDto);
     }
 
