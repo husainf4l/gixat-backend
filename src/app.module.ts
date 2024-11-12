@@ -22,6 +22,7 @@ import { CatgoryModule } from './catgory/catgory.module';
 import { AccountPayableModule } from './account-payable/account-payable.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { QuickbooksModule } from './quickbooks/quickbooks.module';
+import { KanbanModule } from './kanban/kanban.module';
 
 @Module({
   imports: [
@@ -41,7 +42,8 @@ import { QuickbooksModule } from './quickbooks/quickbooks.module';
     CatgoryModule,
     AccountPayableModule,
     DashboardModule,
-    QuickbooksModule,],
+    QuickbooksModule,
+    KanbanModule,],
   controllers: [AppController, JobCardController, JournalController],
   providers: [AppService, JobCardService, JournalService, AccountService],
 })

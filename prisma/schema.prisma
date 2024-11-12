@@ -272,6 +272,26 @@ model Technician {
     jobCards        JobCard[]
 }
 
+
+model Board {
+  id       String  @id @default(uuid())
+  companyId String @unique
+  userId      String?
+  title    String
+  priority Int @default(autoincrement())
+  tasks    Task[]
+}
+
+model Task {
+  id          String @id @default(uuid())
+  boardId     String
+  description String
+  label       String
+  board       Board  @relation(fields: [boardId], references: [id])
+}
+
+
+
 // Enums
 enum UserRole {
     ADMIN
@@ -355,3 +375,5 @@ enum TransactionType {
     SALE
     ADJUSTMENT
 }
+
+
