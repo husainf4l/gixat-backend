@@ -1,6 +1,6 @@
 import { Controller, Post, Body, Get, Param, Delete, Query, Put } from '@nestjs/common';
 import { CarService } from './car.service';
-import { CarStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Controller('cars')
 export class CarController {
@@ -24,7 +24,7 @@ export class CarController {
         return this.carService.findAllMakes();
     }
 
-    
+
 
     // Get paginated cars
     @Get('/paginate')
@@ -39,9 +39,9 @@ export class CarController {
     @Put(':carId/status')
     async updateCarStatus(
         @Param('carId') carId: string,
-        @Body('status') newStatus: CarStatus
+        @Body('status') newStatus: any
     ) {
-        return this.carService.updateCarStatus(carId, newStatus);
+        return this.carService.updateCarStatus(carId);
     }
 
     // Get all cars associated with a specific client account ID

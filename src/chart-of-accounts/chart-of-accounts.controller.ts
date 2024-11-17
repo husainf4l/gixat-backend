@@ -4,7 +4,7 @@ import { ChartOfAccountsService } from './chart-of-accounts.service';
 
 @Controller('chart-of-accounts')
 export class ChartOfAccountsController {
-  constructor(private readonly chartOfAccountsService: ChartOfAccountsService) {}
+  constructor(private readonly chartOfAccountsService: ChartOfAccountsService) { }
 
   @Post('initialize')
   async initializeDefaultAccounts() {

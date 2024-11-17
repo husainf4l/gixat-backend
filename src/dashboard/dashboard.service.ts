@@ -28,21 +28,21 @@ export class DashboardService {
 
         // Get vehicles currently in service
         const activeVehicles = await this.prisma.car.count({
-            where: {
-                status: 'IN_SERVICE',
-            },
+            // where: {
+            //     status: 'IN_SERVICE',
+            // },
         });
 
         const incompleteJobs = await this.prisma.car.count({
             where: {
-                status: {
-                    notIn: ['CANCELLED', 'IN_SERVICE'],
-                },
+                // status: {
+                //     notIn: ['CANCELLED', 'IN_SERVICE'],
+                // },
             },
         });
         const awaitingParts = await this.prisma.car.count({
             where: {
-                status: 'AWAITING_PARTS',
+                // status: 'AWAITING_PARTS',
             },
         });
 
@@ -52,11 +52,11 @@ export class DashboardService {
         // Get completed jobs today
         const completedToday = await this.prisma.jobCard.count({
             where: {
-                status: 'COMPLETED',
-                createdAt: {
-                    gte: new Date(new Date().setHours(0, 0, 0, 0)),
-                    lte: new Date(new Date().setHours(23, 59, 59, 999)),
-                },
+                // status: 'COMPLETED',
+                // createdAt: {
+                //     gte: new Date(new Date().setHours(0, 0, 0, 0)),
+                //     lte: new Date(new Date().setHours(23, 59, 59, 999)),
+                // },
             },
         });
 

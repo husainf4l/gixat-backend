@@ -5,7 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
 export class ChartOfAccountsService {
-  constructor(private prisma: PrismaService) {}
+  constructor(private prisma: PrismaService) { }
 
   private accountNumberPrefix = {
     [AccountClassification.ASSET]: '1',
@@ -34,17 +34,17 @@ export class ChartOfAccountsService {
       { name: 'Accounts Receivable', classification: AccountClassification.ASSET, accountType: AccountType.CURRENT_ASSET, parentAccountName: 'Assets' },
       { name: 'Inventory', classification: AccountClassification.ASSET, accountType: AccountType.CURRENT_ASSET, parentAccountName: 'Assets' },
       { name: 'Fixed Assets', classification: AccountClassification.ASSET, accountType: AccountType.FIXED_ASSET, parentAccountName: 'Assets' },
-      
+
       { name: 'Liabilities', classification: AccountClassification.LIABILITY, accountType: AccountType.CURRENT_LIABILITY },
       { name: 'Accounts Payable', classification: AccountClassification.LIABILITY, accountType: AccountType.CURRENT_LIABILITY, parentAccountName: 'Liabilities' },
       { name: 'Taxes Payable', classification: AccountClassification.LIABILITY, accountType: AccountType.CURRENT_LIABILITY, parentAccountName: 'Liabilities' },
-      
+
       { name: 'Equity', classification: AccountClassification.EQUITY, accountType: AccountType.EQUITY },
       { name: 'Owner’s Equity', classification: AccountClassification.EQUITY, accountType: AccountType.EQUITY, parentAccountName: 'Equity' },
-      
+
       { name: 'Revenue', classification: AccountClassification.REVENUE, accountType: AccountType.REVENUE },
       { name: 'Sales Revenue', classification: AccountClassification.REVENUE, accountType: AccountType.REVENUE, parentAccountName: 'Revenue' },
-      
+
       { name: 'Expenses', classification: AccountClassification.EXPENSE, accountType: AccountType.EXPENSE },
       { name: 'Cost of Goods Sold', classification: AccountClassification.EXPENSE, accountType: AccountType.COST_OF_GOODS_SOLD, parentAccountName: 'Expenses' },
       { name: 'Tax Expense', classification: AccountClassification.EXPENSE, accountType: AccountType.EXPENSE, parentAccountName: 'Expenses' },
@@ -54,6 +54,8 @@ export class ChartOfAccountsService {
       await this.createAccountIfNotExists(account);
     }
   }
+
+
 
   private async createAccountIfNotExists(accountData) {
     const { name, classification, accountType, parentAccountName } = accountData;
@@ -91,7 +93,7 @@ export class ChartOfAccountsService {
   private async generateAccountNumber(classification: AccountClassification, accountType: AccountType): Promise<string> {
     const prefix = this.accountNumberPrefix[classification];
     const suffix = this.accountTypeSuffix[accountType];
-    
+
     // Base account number format (e.g., "110000" for Accounts Receivable under Assets)
     let baseAccountNumber = prefix + suffix;
 

@@ -95,6 +95,7 @@ model AccountReceivable {
     Car            Car[]
     address        Address        @relation(fields: [addressId], references: [id])
     addressId      String
+    JobCard        JobCard[]
 }
 
 model AccountPayable {
@@ -189,7 +190,6 @@ model Car {
     year             Int
     vin              String?           @unique
     licenseNumber    String?
-    status           CarStatus         @default(CHECKED_IN)
     transmissionType TransmissionType
     clientAccountId  String
     clientAccount    AccountReceivable @relation(fields: [clientAccountId], references: [id])
@@ -238,22 +238,25 @@ model Inspection {
 }
 
 model JobCard {
-    id                 String      @id @default(cuid())
+    id                 String             @id @default(cuid())
     carId              String
     date               DateTime
     description        String
-    status             JobStatus
     cost               Float?
     totalLabor         Float?
     totalParts         Float?
     totalCost          Float?
-    car                Car         @relation(fields: [carId], references: [id])
+    clientId           String?
+    client             AccountReceivable? @relation(fields: [clientId], references: [id])
+    car                Car                @relation(fields: [carId], references: [id])
     partsUsed          Part[]
-    assignedTechnician Technician? @relation(fields: [technicianId], references: [id])
+    assignedTechnician Technician?        @relation(fields: [technicianId], references: [id])
     technicianId       String?
-    createdAt          DateTime    @default(now())
-    updatedAt          DateTime    @updatedAt
+    createdAt          DateTime           @default(now())
+    updatedAt          DateTime           @updatedAt
     duration           Int? // Duration in minutes, can be null if the job is not completed
+    Board              BoardStatus?       @relation(fields: [boardId], references: [id])
+    boardId            String?
 }
 
 model Part {
@@ -272,21 +275,12 @@ model Technician {
     jobCards        JobCard[]
 }
 
-model Board {
-    id        String  @id @default(uuid())
+model BoardStatus {
+    id        String    @id @default(uuid())
     companyId String
-    userId    String?
-    title     String
-    priority  Int     @default(autoincrement())
-    tasks     Task[]
-}
-
-model Task {
-    id          String @id @default(uuid())
-    boardId     String
-    description String
-    label       String
-    board       Board  @relation(fields: [boardId], references: [id])
+    status    String
+    priority  Int       @default(autoincrement())
+    jobCards  JobCard[]
 }
 
 // Enums
@@ -326,16 +320,6 @@ enum InvoiceStatus {
     PENDING
     PAID
     OVERDUE
-}
-
-enum CarStatus {
-    CHECKED_IN
-    DIAGNOSIS
-    AWAITING_PARTS
-    IN_SERVICE
-    READY_FOR_PICKUP
-    PICKED_UP
-    CANCELLED
 }
 
 enum TransmissionType {

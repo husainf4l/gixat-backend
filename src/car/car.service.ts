@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { CarStatus, Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CarService {
@@ -33,42 +33,39 @@ export class CarService {
     async findAllCarsL({ page, limit }: { page: number; limit: number }) {
         const skip = (page - 1) * limit;
         const cars = await this.prisma.car.findMany({
-          skip: skip,
-          take: parseInt(limit.toString(), 10),  // Ensures the value is an integer
-          include: {
-            make: true,
-            model: true,
-            clientAccount: true,
-            jobCards: true,
-          },
+            skip: skip,
+            take: parseInt(limit.toString(), 10),  // Ensures the value is an integer
+            include: {
+                make: true,
+                model: true,
+                clientAccount: true,
+                jobCards: true,
+            },
         });
-      
+
         const totalCars = await this.prisma.car.count();
-      
+
         return {
-          data: cars,
-          total: totalCars,
-          currentPage: page,
-          totalPages: Math.ceil(totalCars / limit),
+            data: cars,
+            total: totalCars,
+            currentPage: page,
+            totalPages: Math.ceil(totalCars / limit),
         };
-      }
-      
-    
+    }
+
+
 
     // Update the status of a car
-    async updateCarStatus(carId: string, newStatus: CarStatus) {
-        const car = await this.prisma.car.findUnique({
-            where: { id: carId },
+    async updateCarStatus(jobCardId: string) {
+        const jobCard = await this.prisma.jobCard.findUnique({
+            where: { id: jobCardId },
         });
 
-        if (!car) {
-            throw new NotFoundException(`Car with ID ${carId} not found`);
+        if (!jobCard) {
+            throw new NotFoundException(`Car with ID ${jobCard} not found`);
         }
 
-        return this.prisma.car.update({
-            where: { id: carId },
-            data: { status: newStatus },
-        });
+
     }
 
     // Retrieve all cars associated with a specific client account

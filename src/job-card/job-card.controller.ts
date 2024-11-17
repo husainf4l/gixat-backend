@@ -6,15 +6,39 @@ import { Prisma } from '@prisma/client';
 export class JobCardController {
     constructor(private readonly jobCardService: JobCardService) { }
 
+    @Get('clients')
+    async getClients() {
+        return this.jobCardService.getClients();
+    }
+
+    @Get('inventory')
+    async getInventory() {
+        return this.jobCardService.getInventory();
+    }
+
+
+    @Post()
+    async createJobCard(@Body() data: Prisma.JobCardCreateInput) {
+        try {
+            return await this.jobCardService.createJobCard(data);
+        } catch (error) {
+            throw new Error(`Error creating job card: ${error.message}`);
+        }
+    }
+
+
     @Get()
     async getAllJobCards() {
         return this.jobCardService.getAllJobCards();
     }
 
-    @Post()
-    async createJobCard(@Body() data: Prisma.JobCardCreateInput) {
-        return this.jobCardService.createJobCard(data);
+    @Get('boards/:companyId')
+    async getAllBoards(
+        @Param('companyId') companyId: string,
+    ) {
+        return this.jobCardService.getBoards(companyId);
     }
+
 
     @Put(':id')
     async updateJobCard(@Param('id') id: string, @Body() data: Prisma.JobCardUpdateInput) {
