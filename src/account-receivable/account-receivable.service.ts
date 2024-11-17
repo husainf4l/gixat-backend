@@ -1,5 +1,5 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { BadRequestException, Injectable, UnauthorizedException } from '@nestjs/common';
+import { Prisma, User } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 
 @Injectable()
@@ -63,18 +63,27 @@ export class AccountReceivableService {
 
 
 
-  async findAllClients() {
+  async findAllClients({user}:{user:User} ) {
     return this.prisma.accountReceivable.findMany({
+      
+      where:{companyId:user.companyId},
+
       include: {
         address: true
       }
     });
   }
 
-  // Get paginated list of client accounts
-  async findAllClientsL({ page, limit }: { page: number; limit: number }) {
+  async findAllClientsL({ page, limit, user }: { page: number; limit: number; user:User }) {
+    console.log(user.role)
+    if (user.role !== 'ADMIN') {
+      throw new UnauthorizedException('Access denied: Only admins can view all clients.');
+  }
+
+
     const skip = (page - 1) * limit;
     const clients = await this.prisma.accountReceivable.findMany({
+      where:{companyId:user.companyId},
       skip,
       take: limit,
       include: { address: true }

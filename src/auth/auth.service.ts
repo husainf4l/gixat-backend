@@ -3,8 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken'; // Import jsonwebtoken
-import { SignupRequest } from './auth.controller';
+import { LoginRequest, SignupRequest } from './dto/auth.dto';
+import { UserRole } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -20,55 +20,77 @@ export class AuthService {
 
     async validateUser(mobile: string, pass: string): Promise<any> {
         const user = await this.prisma.user.findUnique({ where: { mobile } });
-        if (user && await bcrypt.compare(pass, user.password)) {
-            const { password, ...result } = user;
-            return result;
+
+        if (!user) {
+            throw new HttpException('User not found', HttpStatus.NOT_FOUND);
         }
-        return null;
+
+        const isPasswordValid = await bcrypt.compare(pass, user.password);
+        if (!isPasswordValid) {
+            throw new HttpException('Invalid password', HttpStatus.UNAUTHORIZED);
+        }
+
+        const { password, ...result } = user; // Exclude password from the result
+        return result;
     }
 
-    async login(user: any) {
-        const payload = { mobile: user.mobile, sub: user.id, role: user.role, companyId: user.companyId };
-        const token = this.jwtService.sign(payload);
-        return { access_token: token, user_id: user.id, companyId: user.companyId };
+    async login(user: { id: string; mobile: string; role: UserRole; companyId: string }) {
+        const payload = {
+            mobile: user.mobile,
+            sub: user.id,
+            role: user.role,
+            companyId: user.companyId,
+        };
+
+        const token = this.jwtService.sign(payload, { expiresIn: '1h' });
+
+        return {
+            access_token: token,
+            user_id: user.id,
+            companyId: user.companyId,
+        };
     }
 
-    async verifyToken(token: string): Promise<boolean> {
+    async verifyToken(token: string): Promise<any> {
         try {
-            jwt.verify(token, this.secret);
-            return true;
+            return this.jwtService.verify(token, { secret: this.secret });
         } catch (error) {
-            console.error('Token verification failed:', error);
-            return false;
+            throw new HttpException('Invalid or expired token', HttpStatus.UNAUTHORIZED);
         }
     }
 
     async signup(user: SignupRequest) {
-        const payload = { name: user.name, mobile: user.mobile, role: user.role, password: user.password };
-
         // Check if the user already exists
         const existingUser = await this.prisma.user.findUnique({
-            where: { mobile: payload.mobile },
+            where: { mobile: user.mobile },
         });
 
         if (existingUser) {
-            throw new HttpException('User already exists with this mobile number', HttpStatus.BAD_REQUEST);
+            throw new HttpException(
+                'User already exists with this mobile number',
+                HttpStatus.BAD_REQUEST,
+            );
         }
 
         // Hash the password before saving to the database
-        const hashedPassword = await bcrypt.hash(payload.password, 10);
+        const hashedPassword = await bcrypt.hash(user.password, 10);
 
         // Create the new user in the database
         const newUser = await this.prisma.user.create({
             data: {
-                name: payload.name,
-                mobile: payload.mobile,
+                name: user.name,
+                mobile: user.mobile,
                 password: hashedPassword,
-                role: payload.role,
+                role: user.role as UserRole, // Ensure role matches the UserRole enum
             },
         });
 
         // Return token and user_id after successful signup
-        return this.login(newUser);
+        return this.login({
+            id: newUser.id,
+            mobile: newUser.mobile,
+            role: newUser.role,
+            companyId: newUser.companyId,
+        });
     }
 }

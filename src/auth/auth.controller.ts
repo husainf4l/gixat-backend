@@ -1,33 +1,17 @@
 import { Controller, Post, Body, UnauthorizedException, Get, Req, Res, HttpException, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { Request as ExpressRequest, Response as ExpressResponse } from 'express';
-import { UserService } from 'src/user/user.service';
-
-interface LoginRequest {
-    mobile: string;
-    password: string;
-}
-
-export interface SignupRequest {
-    name: string;
-    mobile: string;
-    password: string;
-    role: 'EMPLOYEE' | 'ADMIN';
-}
+import { LoginRequest, SignupRequest } from './dto/auth.dto';
 
 @Controller('auth')
 export class AuthController {
-    constructor(private readonly authService: AuthService,
-    ) { }
+    constructor(private readonly authService: AuthService) {}
 
     // Login method: Authenticates the user and issues an access token
     @Post('login')
     async login(@Body() req: LoginRequest) {
         const user = await this.authService.validateUser(req.mobile, req.password);
-        if (!user) {
-            throw new UnauthorizedException('Invalid credentials');
-        }
-        return this.authService.login(user);  // Return the token response
+        return this.authService.login(user); // Pass validated user directly to login
     }
 
     // Verify token method: Validates the provided JWT token
@@ -40,24 +24,16 @@ export class AuthController {
         }
 
         try {
-            // Verify the token
-            const isValid = await this.authService.verifyToken(token);
-            if (isValid) {
-                res.status(HttpStatus.OK).json({ valid: true });
-            } else {
-                res.status(HttpStatus.UNAUTHORIZED).json({ valid: false });
-            }
+            const decoded = await this.authService.verifyToken(token);
+            res.status(HttpStatus.OK).json({ valid: true, decoded });
         } catch (error) {
             console.error('Token verification failed:', error);
-            throw new HttpException('Token verification failed', HttpStatus.UNAUTHORIZED);
+            res.status(HttpStatus.UNAUTHORIZED).json({ valid: false, message: error.message });
         }
     }
-
 
     @Post('signup')
     async signup(@Body() req: SignupRequest) {
         return this.authService.signup(req);
     }
-
-
 }

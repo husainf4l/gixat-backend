@@ -6,8 +6,9 @@ import { Prisma, JobCard, BoardStatus, } from '@prisma/client';
 export class JobCardService {
     constructor(private prisma: PrismaService) { }
 
-    async getClients() {
+    async getClients(companyId:string) {
         return this.prisma.accountReceivable.findMany({
+            
             include: {
                 Car: {
                     include: {

@@ -1,10 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Patch, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Patch, Post, Query, UnauthorizedException } from '@nestjs/common';
 import { AccountReceivableService } from './account-receivable.service';
 import { Prisma } from '@prisma/client';
+import { Headers } from '@nestjs/common';
+import { UserService } from 'src/user/user.service';
+
 
 @Controller('account-receivable')
 export class AccountReceivableController {
-  constructor(private readonly accountReceivableService: AccountReceivableService) {}
+  constructor(private readonly accountReceivableService: AccountReceivableService, private userService:UserService) {}
 
   @Post('create')
   async createAccountReceivable(@Body() data: {
@@ -23,19 +26,37 @@ export class AccountReceivableController {
     return this.accountReceivableService.createAccountReceivable(data);
   }
 
+  // @Get('clients')
+  // async getAllClients() {
+  //     return this.accountReceivableService.findAllClients();
+  // }
+  
   @Get('clients')
-  async getAllClients() {
-      return this.accountReceivableService.findAllClients();
-  }
+    async getClients(@Headers('authorization') token?: string) {
+    const user = this.userService.getUserFromToken(token);
+
+        return this.accountReceivableService.findAllClients(
+        {  user:user}
+        );
+     
+    }
+
 
   // Paginated list of client accounts
   @Get('clients/limit')
   async findAllClientsL(
-      @Query('page') page = 1,
-      @Query('limit') limit = 10
+    @Headers('authorization') token?: string,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10
   ) {
-      return this.accountReceivableService.findAllClientsL({ page: Number(page), limit: Number(limit) });
+    const user = this.userService.getUserFromToken(token);
+    return this.accountReceivableService.findAllClientsL({
+      user:user,
+      page: Number(page),
+      limit: Number(limit),
+    });
   }
+  
 
   // Search for clients by name or other fields
   @Get('clients/search')

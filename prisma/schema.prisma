@@ -96,6 +96,7 @@ model AccountReceivable {
     address        Address        @relation(fields: [addressId], references: [id])
     addressId      String
     JobCard        JobCard[]
+    companyId      String? 
 }
 
 model AccountPayable {

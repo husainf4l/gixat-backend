@@ -2,6 +2,8 @@ import { Controller, Post, Get, Put, Delete, Param, Body, Query, HttpCode, HttpS
 import { UserService } from './user.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from '@prisma/client';
+import { Headers } from '@nestjs/common';
+
 
 @Controller('users')
 export class UserController {
@@ -37,4 +39,16 @@ export class UserController {
     async remove(@Param('id') id: string): Promise<void> {
         await this.userService.remove(id);
     }
+
+    @Get('user-info')
+async getUserInfo(@Headers('authorization') token?: string) {
+  const user = this.userService.getUserFromToken(token);
+
+  return {
+    userId: user.sub,
+    companyId: user.companyId,
+    role: user.role,
+  };
+}
+
 }

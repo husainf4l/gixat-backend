@@ -1,16 +1,43 @@
-import { Controller, Get, Post, Put, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Param, Body, UnauthorizedException } from '@nestjs/common';
 import { JobCardService } from './job-card.service';
 import { Prisma } from '@prisma/client';
+import { JwtService } from '@nestjs/jwt';
+import { Headers } from '@nestjs/common';
+
 
 @Controller('job-cards')
 export class JobCardController {
-    constructor(private readonly jobCardService: JobCardService) { }
+    constructor(private readonly jobCardService: JobCardService, private readonly jwtService: JwtService    ) { }
 
     @Get('clients')
-    async getClients() {
-        return this.jobCardService.getClients();
+    async getClients(@Headers('authorization') token?: string) {
+        // Extract and decode the token
+      if (!token) {
+        throw new UnauthorizedException('Token is required');
+      }
+  
+      // Remove "Bearer " if present
+      const accessToken = token.startsWith('Bearer ') ? token.split(' ')[1] : token;
+  
+      try {
+        const decoded = this.jwtService.verify(accessToken, { secret: process.env.JWT_SECRET });
+  
+        // Extract companyId from the decoded token
+        const { companyId } = decoded;
+  
+        if (!companyId) {
+          throw new UnauthorizedException('Invalid token: companyId missing');
+        }
+  
+        // Fetch and return clients for the company
+        return this.jobCardService.getClients(companyId);
+      } catch (error) {
+        console.error('Token verification failed:', error);
+        throw new UnauthorizedException('Invalid or expired token');
+      }
     }
 
+    
     @Get('inventory')
     async getInventory() {
         return this.jobCardService.getInventory();
