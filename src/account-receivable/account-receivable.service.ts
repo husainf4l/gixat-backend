@@ -63,27 +63,28 @@ export class AccountReceivableService {
 
 
 
-  async findAllClients({user}:{user:User} ) {
+  async findAllClients({ user }: { user: User }) {
     return this.prisma.accountReceivable.findMany({
-      
-      where:{companyId:user.companyId},
+
+      where: { companyId: user.companyId },
 
       include: {
-        address: true
+        address: true,
+        Car: true
       }
     });
   }
 
-  async findAllClientsL({ page, limit, user }: { page: number; limit: number; user:User }) {
+  async findAllClientsL({ page, limit, user }: { page: number; limit: number; user: User }) {
     console.log(user.role)
     if (user.role !== 'ADMIN') {
       throw new UnauthorizedException('Access denied: Only admins can view all clients.');
-  }
+    }
 
 
     const skip = (page - 1) * limit;
     const clients = await this.prisma.accountReceivable.findMany({
-      where:{companyId:user.companyId},
+      where: { companyId: user.companyId },
       skip,
       take: limit,
       include: { address: true }

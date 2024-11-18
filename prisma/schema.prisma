@@ -96,7 +96,7 @@ model AccountReceivable {
     address        Address        @relation(fields: [addressId], references: [id])
     addressId      String
     JobCard        JobCard[]
-    companyId      String? 
+    companyId      String?
 }
 
 model AccountPayable {
@@ -248,6 +248,7 @@ model JobCard {
     totalParts         Float?
     totalCost          Float?
     clientId           String?
+    jobRequest         jobRequest[]
     client             AccountReceivable? @relation(fields: [clientId], references: [id])
     car                Car                @relation(fields: [carId], references: [id])
     partsUsed          Part[]
@@ -258,6 +259,15 @@ model JobCard {
     duration           Int? // Duration in minutes, can be null if the job is not completed
     Board              BoardStatus?       @relation(fields: [boardId], references: [id])
     boardId            String?
+}
+
+model jobRequest {
+    id            String  @id @default(cuid())
+    JobCard       JobCard @relation(fields: [jobCardId], references: [id])
+    jobCardId     String
+    description   String
+    estimatedCost Int?
+    IsChecked     Boolean
 }
 
 model Part {
