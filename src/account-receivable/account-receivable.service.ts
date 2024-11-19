@@ -13,11 +13,13 @@ export class AccountReceivableService {
     phoneNumber: string;
     email?: string;
     notes?: string;
-    address: {
-      country: string;
-      city: string;
-      streetAddress: string;
-    };
+    address?: {
+      country?: string;
+      city?: string;
+      streetAddress?: string;
+    },
+    companyId: string;
+
   }) {
     // Step 1: Check if an AccountReceivable entry with the same phone number already exists
     const existingAccount = await this.prisma.accountReceivable.findUnique({
@@ -45,20 +47,25 @@ export class AccountReceivableService {
         taxId: data.taxId,
         phoneNumber: data.phoneNumber,
         email: data.email,
+        companyId: data.companyId,
         notes: data.notes,
         chartAccount: {
           connect: { id: accountsReceivableAccount.id }, // Connect to ChartOfAccount
         },
-        address: {
-          create: {
-            country: data.address.country,
-            city: data.address.city,
-            street: data.address.streetAddress
-          },
-        },
+        address: data.address
+          ? {
+            create: {
+              country: data.address?.country,
+              city: data.address?.city,
+              street: data.address?.streetAddress,
+            },
+          }
+          : undefined, // Skip address creation if not provided
       },
     });
   }
+
+
 
 
 
@@ -70,7 +77,7 @@ export class AccountReceivableService {
 
       include: {
         address: true,
-        Car: true
+        Car: { include: { model: true, make: true } }
       }
     });
   }

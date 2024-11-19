@@ -8,7 +8,13 @@ export class CarService {
 
     // Create a new car entry
     async createCar(data: Prisma.CarCreateInput) {
-        return this.prisma.car.create({ data });
+        return this.prisma.car.create({
+            data,
+            include: {
+                model: true,
+                make: true,
+            }
+        });
     }
 
     // Retrieve all car makes, including their models

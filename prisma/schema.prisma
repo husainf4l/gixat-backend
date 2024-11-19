@@ -93,8 +93,8 @@ model AccountReceivable {
     chartAccount   ChartOfAccount @relation(fields: [chartAccountId], references: [id])
     invoices       Invoice[]
     Car            Car[]
-    address        Address        @relation(fields: [addressId], references: [id])
-    addressId      String
+    address        Address?       @relation(fields: [addressId], references: [id])
+    addressId      String?
     JobCard        JobCard[]
     companyId      String?
 }
